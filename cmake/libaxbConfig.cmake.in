@@ -1,0 +1,30 @@
+#- CMake configuration file for libaxb
+# Sets the following variables if libaxb was found:
+#  LIBAXB_FOUND         : TRUE if found
+#  LIBAXB_INCLUDE_DIRS  : Include-directories to be used
+#  LIBAXB_LIBRARIES     : Libraries to link against
+
+# Compute paths
+get_filename_component(LIBAXB_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+if(EXISTS "${LIBAXB_CMAKE_DIR}/CMakeCache.txt")
+   # in build tree
+   get_filename_component(LIBAXB_INSTALL_PREFIX "${LIBAXB_CMAKE_DIR}" PATH)
+   set(LIBAXB_INCLUDE_DIR "${_LIBAXB_PREFIX}")
+else()
+   set(LIBAXB_INSTALL_PREFIX "${LIBAXB_CMAKE_DIR}/@CONF_REL_INSTALL_PREFIX@")
+   set(LIBAXB_INCLUDE_DIR "${LIBAXB_CMAKE_DIR}/@CONF_REL_INCLUDE_DIR@")
+endif()
+
+# Find OpenCL
+set(_LIBAXB_CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}")
+list(INSERT CMAKE_MODULE_PATH 0 "${LIBAXB_CMAKE_DIR}")
+if(libaxb_FIND_REQUIRED)
+   find_package(OpenCL QUIET REQUIRED)
+else()
+   find_package(OpenCL QUIET)
+endif()
+set(CMAKE_MODULE_PATH "${_LIBAXB_CMAKE_MODULE_PATH}")
+
+# Set up variables
+set(LIBAXB_INCLUDE_DIRS "${LIBAXB_INCLUDE_DIR}" ${OPENCL_INCLUDE_DIRS})
+set(LIBAXB_LIBRARIES ${OPENCL_LIBRARIES})
