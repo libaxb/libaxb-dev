@@ -1,3 +1,6 @@
+#ifndef LIBAXP_LIBAXB_H
+#define LIBAXP_LIBAXB_H
+
 /**
  * libaxb - Library providing a single interface to many well-tuned GPU libraries
  *
@@ -6,6 +9,7 @@
  * License: MIT license. See file LICENSE for details.
 */
 
+#include <stdlib.h>
 
 typedef enum {
  AXB_INT_32,
@@ -14,9 +18,10 @@ typedef enum {
  AXB_REAL_DOUBLE,
  AXB_COMPLEX_FLOAT,
  AXB_COMPLEX_DOUBLE
-}                          axbDataType_t;
-typedef int                axbStatus_t;
-typedef struct axbHandle_s axbHandle_t;
+}                           axbDataType_t;
+typedef int                 axbStatus_t;
+struct axbHandle_s;
+typedef struct axbHandle_s *axbHandle_t;
 
 
 
@@ -53,11 +58,13 @@ axbStatus_t axbErrorGetString(axbStatus_t error, char *string, int string_size);
 ///
 ////////// Memory Backends
 ///
+struct axbMemBackend_s;
+typedef struct axbMemBackend_s    *axbMemBackend_t;
 
-typedef struct axbMemBackend_s    axbMemBackend_t;
-
-axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t *mem);
+axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem);
+axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t mem);
 axbStatus_t axbMemBackendSetName(axbMemBackend_t backend, const char *name);
+axbStatus_t axbMemBackendGetName(axbMemBackend_t backend, const char **name);
 
 /** @brief Returns all the available memory backends.
  *
@@ -69,19 +76,26 @@ axbStatus_t axbMemBackendSetName(axbMemBackend_t backend, const char *name);
 axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t *mem, int *mem_size);
 axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name);
 
+axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, void *(*func)(size_t, void *));
+axbStatus_t axbMemBackendSetFree(axbMemBackend_t mem, axbStatus_t (*func)(void *, void *));
 
+axbStatus_t axbMemBackendMalloc(axbMemBackend_t mem, size_t num_bytes, void **ptr);
+axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr);
+
+axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem);
 
 
 ///
 ////////// Backends for operations
 ///
+struct axbOpBackend_s;
+typedef struct axbOpBackend_s     *axbOpBackend_t;
+typedef char *                     axbOperationID_t;
 
-typedef struct axbOpBackend_s     axbOpBackend_t;
-typedef char *                    axbOperationID_t;
-
-axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t *ops);
+axbStatus_t axbOpBackendCreate(axbOpBackend_t *ops);
+axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t ops);
 axbStatus_t axbOpBackendSetName(axbOpBackend_t ops, const char *name);
-axbStatus_t axbOpBackendGetName(axbOpBackend_t ops, const char *name, int name_size);
+axbStatus_t axbOpBackendGetName(axbOpBackend_t ops, const char **name);
 
 /** @brief Sets the specific worker routine for the operation identified by 'op_id'.
  *
@@ -103,14 +117,15 @@ axbStatus_t axbOpBackendSetOperation(axbOpBackend_t ops, const axbOperationID_t 
 axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t *ops, int *ops_size);
 axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name);
 
-
+axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops);
 
 ///
 ////////// Scalar
 ///
 
 /** @brief Opaque handle to a scalar */
-typedef struct axbScalar_s axbScalar_t;
+struct axbScalar_s;
+typedef struct axbScalar_s *axbScalar_t;
 
 axbStatus_t axbScalarCreateBegin(axbHandle_t handle, axbScalar_t *scalar);
 axbStatus_t axbScalarSetDataType(axbScalar_t scalar, axbDataType_t datatype);
@@ -122,6 +137,7 @@ axbStatus_t axbScalarSetValue(axbScalar_t scalar, void *value, axbDataType_t val
 // convenience routine?
 axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value, axbDataType_t datatype, axbMemBackend_t mem);
 
+axbStatus_t axbScalarDestroy(axbScalar_t scalar);
 
 
 ///
@@ -129,12 +145,13 @@ axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value
 ///
 
 /** @brief Opaque handle to a vector (dense or sparse) */
-typedef struct axbVec_s axbVec_t;
+struct axbVec_s;
+typedef struct axbVec_s *axbVec_t;
 
-axbStatus_t axbVecCreateBegin(axbVec_t *vec);
+axbStatus_t axbVecCreateBegin(axbHandle_t handle, axbVec_t *vec);
 
-axbStatus_t axbVecSetSize(axbVec_t vec, int size);
-axbStatus_t axbVecGetSize(axbVec_t vec, int *size);
+axbStatus_t axbVecSetSize(axbVec_t vec, size_t size);
+axbStatus_t axbVecGetSize(axbVec_t vec, size_t *size);
 
 axbStatus_t axbVecSetDataType(axbVec_t vec, axbDataType_t datatype);
 axbStatus_t axbVecGetDataType(axbVec_t vec, axbDataType_t *datatype);
@@ -147,11 +164,8 @@ axbStatus_t axbVecCreateEnd(axbVec_t vec);
 axbStatus_t axbVecSetName(axbVec_t vec, const char *name);
 axbStatus_t axbVecGetName(axbVec_t vec, const char **name);
 
-axbStatus_t axbVecSetValues(axbVec_t vec, void *, axbDataType_t value_datatype);
-axbStatus_t axbVecGetValues(axbVec_t vec, void *, axbDataType_t value_datatype);
-
-axbStatus_t axbVecSetValues(axbVec_t vec, void *, axbDataType_t value_datatype);
-axbStatus_t axbVecGetValues(axbVec_t vec, void *, axbDataType_t value_datatype);
+axbStatus_t axbVecSetValues(axbVec_t vec, void *values, axbDataType_t values_datatype);
+axbStatus_t axbVecGetValues(axbVec_t vec, void *values, axbDataType_t values_datatype);
 
 
 // operations
@@ -160,3 +174,7 @@ axbStatus_t axbVecGetValues(axbVec_t vec, void *, axbDataType_t value_datatype);
 axbStatus_t axbVecAXPY(axbVec_t y, axbScalar_t alpha, axbVec_t x);
 // more to follow
 
+
+axbStatus_t axbVecDestroy(axbVec_t vec);
+
+#endif
