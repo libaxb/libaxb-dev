@@ -31,7 +31,8 @@ axbStatus_t axbOpBackendRegister_Host(axbHandle_t handle)
   // populate host_backend:
   axbOpBackendSetName(host_backend, "host");
 
-  axbOpBackendSetOperation(host_backend, 0, (void (*)(void)) op_axpy, NULL);
+  axbOperationID_t op_id = 0;
+  axbOpBackendAddOperation(host_backend, "vec-axpy", (axbStatus_t (*)(void))op_axpy, NULL, &op_id);
 
   // push into enclosing context identified by handle:
   axbOpBackendRegister(handle, host_backend);

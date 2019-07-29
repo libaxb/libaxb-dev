@@ -126,7 +126,12 @@ axbStatus_t axbVecGetValues(axbVec_t vec, void *values, axbDataType_t values_dat
 /** @brief y = alpha * x + y */
 axbStatus_t axbVecAXPY(axbVec_t y, axbScalar_t alpha, axbVec_t x)
 {
-  y->opBackend->op_axpy(y, alpha, x, y->opBackend->impl);
+  const int AXB_OP_VEC_AXPY = 0;
+  axbOpDescriptor_t op_desc = y->opBackend->op_table[AXB_OP_VEC_AXPY];
+  axbStatus_t (*op)(axbVec_t, axbScalar_t, axbVec_t, void*) = (axbStatus_t (*)(axbVec_t, axbScalar_t, axbVec_t, void*)) op_desc.func;
+
+  op(y, alpha, x, op_desc.func_data);
+  return 0;
 }
 // more to follow
 

@@ -15,14 +15,28 @@ struct axbMemBackend_s
 };
 
 
+////////////////////
+
+struct axbOpDescriptor_s
+{
+  axbStatus_t (*func)(void);   // type-agnostic function pointer
+  void  *func_data;
+
+  char  name[32];
+
+  axbOperationID_t id;
+};
+typedef struct axbOpDescriptor_s axbOpDescriptor_t;
+
 struct axbOpBackend_s
 {
   size_t name_capacity;
   char *name;
 
   // table of operations:
-  axbStatus_t (*op_axpy)(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *data);
-  void *op_axpy_data;
+  size_t op_table_size;
+  size_t op_table_capacity;
+  axbOpDescriptor_t *op_table;
 
   // more operations to be added
   void *impl;

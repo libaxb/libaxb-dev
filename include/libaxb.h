@@ -90,22 +90,23 @@ axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem);
 ///
 struct axbOpBackend_s;
 typedef struct axbOpBackend_s     *axbOpBackend_t;
-typedef char *                     axbOperationID_t;
+typedef int                        axbOperationID_t;
 
 axbStatus_t axbOpBackendCreate(axbOpBackend_t *ops);
 axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t ops);
 axbStatus_t axbOpBackendSetName(axbOpBackend_t ops, const char *name);
 axbStatus_t axbOpBackendGetName(axbOpBackend_t ops, const char **name);
 
-/** @brief Sets the specific worker routine for the operation identified by 'op_id'.
+/** @brief Adds a new worker routine.
  *
  * @param ops      The OpBackEnd handle for which the operation should be set.
- * @param op_id    The ID of the operation.
- * @param func     Function pointer for the respective operation. The actual function signature is operation-dependent, so func is casted internally to the correct signature.
- * @param aux_data Pointer to auxiliary data that will be passed to func when called.
+ * @param op_name  The name of the operation. Maximum length is 32 characters.
+ * @param op_func  Function pointer for the respective operation. The actual function signature is operation-dependent, so func is casted internally to the correct signature.
+ * @param op_data  Pointer to auxiliary data that will be passed to func when called.
+ * @param op_id    [Out] Identifier for the operation that can be used to quickly retrieve an operation later on.
  * @return         Returns a success- or error-code. @see axbErrorGetName(), axbErrorGetString()
  */
-axbStatus_t axbOpBackendSetOperation(axbOpBackend_t ops, const axbOperationID_t op_id, void (*func)(void), void *aux_data);
+axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, axbStatus_t (*op_func)(void), void *op_data, axbOperationID_t *op_id);
 
 
 /** @brief Returns all the available operations backends.
