@@ -3,8 +3,6 @@
 
 #include "libaxb.h"
 
-#include "libaxb/backend.h"
-
 struct axbMemBackend_s
 {
   size_t name_capacity;
