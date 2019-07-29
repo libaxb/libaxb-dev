@@ -28,7 +28,7 @@ struct axbScalar_s
   char *name;
 
   axbDataType_t datatype;
-  char data[16];   // TODO: replace by union?
+  void *data;
 
   axbMemBackend_t memBackend;
   axbOpBackend_t  opBackend;

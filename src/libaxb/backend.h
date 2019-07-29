@@ -3,6 +3,7 @@
 
 #include "libaxb.h"
 
+
 struct axbMemBackend_s
 {
   size_t name_capacity;
@@ -10,6 +11,9 @@ struct axbMemBackend_s
 
   void *      (*op_malloc)(size_t, void*);
   axbStatus_t (*op_free)  (void*, void*);
+
+  axbStatus_t (*op_copyin) (void*, axbDataType_t, void*, axbDataType_t, size_t);
+  axbStatus_t (*op_copyout)(void*, axbDataType_t, void*, axbDataType_t, size_t);
 
   void *impl;   //pimpl idiom for backends to drop in their specific stuff
 };
@@ -43,7 +47,22 @@ struct axbOpBackend_s
 };
 
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle);
+axbStatus_t axbMemBackendSetValues(axbMemBackend_t mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
+axbStatus_t axbMemBackendGetValues(axbMemBackend_t mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
+
 axbStatus_t axbOpBackendRegisterDefaults(axbHandle_t handle);
+
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 
 #endif

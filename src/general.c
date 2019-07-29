@@ -23,6 +23,17 @@ axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t mem)
   return 0;
 }
 
+axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *mem_size)
+{
+  *mem = handle->memBackends;
+  *mem_size = handle->memBackends_size;
+  return 0;
+}
+
+
+
+///////////////
+
 axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t mem)
 {
   // check if there is still room for another backend. If not, resize array:
@@ -41,7 +52,15 @@ axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t mem)
   return 0;
 }
 
+axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, int *ops_size)
+{
+  *ops = handle->opBackends;
+  *ops_size = handle->opBackends_size;
+  return 0;
+}
 
+
+/////////////////
 
 axbStatus_t axbInit(axbHandle_t *handle)
 {

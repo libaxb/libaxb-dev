@@ -4,6 +4,7 @@
 #include "libaxb.h"
 
 #include "libaxb/backend/host.h"
+#include "libaxb/backend/cuda.h"
 #include "libaxb/backend.h"
 
 axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
@@ -29,6 +30,7 @@ axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem)
 axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle)
 {
   axbMemBackendRegister_Host(handle);
+  axbMemBackendRegister_CUDA(handle);
   return 0;
 }
 
@@ -76,6 +78,28 @@ axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr)
   return 0;
 }
 
+
+axbStatus_t axbMemBackendSetCopyIn(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t))
+{
+  mem->op_copyin = func;
+  return 0;
+}
+axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t))
+{
+  mem->op_copyout = func;
+  return 0;
+}
+
+axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+{
+  mem->op_copyin(src, src_type, dest, dest_type, n);
+  return 0;
+}
+axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+{
+  mem->op_copyout(src, src_type, dest, dest_type, n);
+  return 0;
+}
 
 
 ////////////////
@@ -149,6 +173,7 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
 axbStatus_t axbOpBackendRegisterDefaults(axbHandle_t handle)
 {
   axbOpBackendRegister_Host(handle);
+  axbOpBackendRegister_CUDA(handle);
   return 0;
 }
 

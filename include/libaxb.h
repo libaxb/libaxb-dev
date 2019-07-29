@@ -24,7 +24,10 @@ struct axbHandle_s;
 typedef struct axbHandle_s *axbHandle_t;
 
 
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 ///
 ///////// General helper functions
@@ -73,7 +76,7 @@ axbStatus_t axbMemBackendGetName(axbMemBackend_t backend, const char **name);
  * @param mem_size   In: Maximum number of elements to be written to `mem`. Out: Number of actual elements in `mem`.
 *  @return          Returns a success- or error-code. @see axbErrorGetName(), axbErrorGetString()
  */
-axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t *mem, int *mem_size);
+axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *mem_size);
 axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name);
 
 axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, void *(*func)(size_t, void *));
@@ -81,6 +84,13 @@ axbStatus_t axbMemBackendSetFree(axbMemBackend_t mem, axbStatus_t (*func)(void *
 
 axbStatus_t axbMemBackendMalloc(axbMemBackend_t mem, size_t num_bytes, void **ptr);
 axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr);
+
+axbStatus_t axbMemBackendSetCopyIn(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t));
+axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t));
+
+axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n);
+axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n);
+
 
 axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem);
 
@@ -115,7 +125,7 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
  * @param ops        Pointer to multiple operation backend handles.
  * @param ops_size   In: Maximum number of elements in ops, Out: Actual number of handles in `ops`.
 */
-axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t *ops, int *ops_size);
+axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, int *ops_size);
 axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name);
 
 axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops);
@@ -160,6 +170,10 @@ axbStatus_t axbVecGetDataType(axbVec_t vec, axbDataType_t *datatype);
 axbStatus_t axbVecSetMemBackend(axbVec_t vec, axbMemBackend_t backend);
 axbStatus_t axbVecGetMemBackend(axbVec_t vec, axbMemBackend_t *backend);
 
+axbStatus_t axbVecSetOpBackend(axbVec_t vec, axbOpBackend_t backend);
+axbStatus_t axbVecGetOpBackend(axbVec_t vec, axbOpBackend_t *backend);
+
+
 axbStatus_t axbVecCreateEnd(axbVec_t vec);
 
 axbStatus_t axbVecSetName(axbVec_t vec, const char *name);
@@ -177,5 +191,9 @@ axbStatus_t axbVecAXPY(axbVec_t y, axbScalar_t alpha, axbVec_t x);
 
 
 axbStatus_t axbVecDestroy(axbVec_t vec);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

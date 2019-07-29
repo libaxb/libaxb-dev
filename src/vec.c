@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <stdio.h>
 #include "libaxb.h"
 #include "libaxb/general.h"
 
@@ -72,6 +73,7 @@ axbStatus_t axbVecGetOpBackend(axbVec_t vec, axbOpBackend_t *backend)
 axbStatus_t axbVecCreateEnd(axbVec_t vec)
 {
   if (vec->size > 0) {
+    //printf("Initializing vector for backend %s\n", vec->memBackend->name);
     vec->data = vec->memBackend->op_malloc(sizeof(double) * vec->size, vec->memBackend->impl);
     if (!vec->data) return 123; // out of memory
   }
@@ -96,28 +98,11 @@ axbStatus_t axbVecGetName(axbVec_t vec, const char **name)
 
 axbStatus_t axbVecSetValues(axbVec_t vec, void *values, axbDataType_t values_datatype)
 {
-  if (values_datatype != vec->datatype) return 1237;  // Data conversion not yet implemented!
-
-  double *d_data = vec->data;
-  double *d_values = values;
-  for (size_t i=0; i<vec->size; ++i)
-  {
-    d_data[i] = d_values[i];
-  }
-  return 0;
+  return axbMemBackendCopyIn(vec->memBackend, values, values_datatype, vec->data, vec->datatype, vec->size);
 }
 axbStatus_t axbVecGetValues(axbVec_t vec, void *values, axbDataType_t values_datatype)
 {
-  if (values_datatype != vec->datatype) return 1237;  // Data conversion not yet implemented!
-
-  double *d_data = vec->data;
-  double *d_values = values;
-  for (size_t i=0; i<vec->size; ++i)
-  {
-    d_values[i] = d_data[i];
-  }
-
-  return 0;
+  return axbMemBackendCopyOut(vec->memBackend, vec->data, vec->datatype, values, values_datatype, vec->size);
 }
 
 
@@ -140,7 +125,7 @@ axbStatus_t axbVecDestroy(axbVec_t vec)
   if (vec->init != 119346) return 119346;
   vec->init += 1;
 
-  free(vec->data);
+  vec->memBackend->op_free(vec->data, NULL);
   free(vec->name);
   free(vec);
   return 0;

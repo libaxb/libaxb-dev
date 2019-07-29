@@ -14,7 +14,6 @@ axbStatus_t axbScalarCreateBegin(axbHandle_t handle, axbScalar_t *scalar)
   (*scalar)->name = malloc(10);
   (*scalar)->name[0] = 0;
   (*scalar)->name_capacity = 10;
-  for (size_t i=0; i<sizeof((*scalar)->data); ++i) (*scalar)->data[0] = 0;
 
   (*scalar)->datatype = AXB_REAL_DOUBLE;
   (*scalar)->memBackend = handle->memBackends[0];
@@ -30,23 +29,25 @@ axbStatus_t axbScalarSetDataType(axbScalar_t scalar, axbDataType_t datatype)
 }
 axbStatus_t axbScalarSetMemBackend(axbScalar_t scalar, axbMemBackend_t mem)
 {
-  scalar->memBackend = mem;
+  if (mem) scalar->memBackend = mem;
   return 0;
 }
 axbStatus_t axbScalarCreateEnd(axbScalar_t scalar)
 {
+  scalar->data = scalar->memBackend->op_malloc(sizeof(double), scalar->memBackend->impl);
+
   // nothing to do -> scalar already created!
   return 0;
 }
 
 axbStatus_t axbScalarSetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype)
 {
-  if (scalar->datatype != value_datatype) return 8713;
+  return axbMemBackendCopyIn(scalar->memBackend, value, value_datatype, scalar->data, scalar->datatype, 1);
+}
 
-  double *val = (double *)value;
-  double *d_data = (double *)scalar->data;
-  *d_data = *val;
-  return 0;
+axbStatus_t axbScalarGetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype)
+{
+  return axbMemBackendCopyOut(scalar->memBackend, scalar->data, scalar->datatype, value, value_datatype, 1);
 }
 
 // convenience routine?
@@ -66,6 +67,7 @@ axbStatus_t axbScalarDestroy(axbScalar_t scalar)
   if (scalar->init != 896283) return 896283;
   scalar->init += 1;
 
+  scalar->memBackend->op_free(scalar->data, NULL);
   free(scalar->name);
   free(scalar);
   return 0;

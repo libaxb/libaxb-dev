@@ -14,10 +14,31 @@ int main(int argc, char **argv)
   printf("Initializing libaxb...\n");
   AXB_ERR_CHECK(axbInit(&axbHandle));
 
+  printf("Available memory backends:\n");
+  axbMemBackend_t *mem_backends;
+  int num_backends;
+  axbMemBackendGetAll(axbHandle, &mem_backends, &num_backends);
+  for (int i=0; i<num_backends; ++i) {
+    const char *backend_name;
+    axbMemBackendGetName(mem_backends[i], &backend_name);
+    printf(" - %s\n", backend_name);
+  }
+
+  printf("Available operation backends:\n");
+  axbOpBackend_t *op_backends;
+  axbOpBackendGetAll(axbHandle, &op_backends, &num_backends);
+  for (int i=0; i<num_backends; ++i) {
+    const char *backend_name;
+    axbOpBackendGetName(op_backends[i], &backend_name);
+    printf(" - %s\n", backend_name);
+  }
+
   double ones[] = {1, 1, 1, 1, 1};
   axbVec_t x;
   AXB_ERR_CHECK(axbVecCreateBegin(axbHandle, &x));
   AXB_ERR_CHECK(axbVecSetSize(x, 5));
+  AXB_ERR_CHECK(axbVecSetMemBackend(x, mem_backends[1]));
+  AXB_ERR_CHECK(axbVecSetOpBackend(x, op_backends[1]));
   AXB_ERR_CHECK(axbVecCreateEnd(x));
   AXB_ERR_CHECK(axbVecSetValues(x, ones, AXB_REAL_DOUBLE));
 
@@ -25,12 +46,14 @@ int main(int argc, char **argv)
   axbVec_t y;
   AXB_ERR_CHECK(axbVecCreateBegin(axbHandle, &y));
   AXB_ERR_CHECK(axbVecSetSize(y, 5));
+  AXB_ERR_CHECK(axbVecSetMemBackend(y, mem_backends[1]));
+  AXB_ERR_CHECK(axbVecSetOpBackend(y, op_backends[1]));
   AXB_ERR_CHECK(axbVecCreateEnd(y));
   AXB_ERR_CHECK(axbVecSetValues(y, twos, AXB_REAL_DOUBLE));
 
   double three = 3.0;
   axbScalar_t alpha;
-  AXB_ERR_CHECK(axbScalarCreate(axbHandle, &alpha, &three, AXB_REAL_DOUBLE, NULL));
+  AXB_ERR_CHECK(axbScalarCreate(axbHandle, &alpha, &three, AXB_REAL_DOUBLE, mem_backends[1]));
   AXB_ERR_CHECK(axbVecAXPY(y, alpha, x));
 
   double result[] = {0, 0, 0, 0, 0};
