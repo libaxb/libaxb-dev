@@ -6,10 +6,6 @@
 #include "libaxb/backend.h"
 #include "libaxb/general.h"
 
-
-#ifdef LIBAXB_WITH_CUDA
-
-
 #include <cuda_runtime.h>
 
 __global__
@@ -53,4 +49,3 @@ extern "C" axbStatus_t axbOpBackendRegister_CUDA(axbHandle_t handle)
   return 0;
 }
 
-#endif

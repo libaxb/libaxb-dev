@@ -4,10 +4,6 @@
 #include "libaxb.h"
 #include "libaxb/backend.h"
 
-
-#ifdef LIBAXB_WITH_CUDA
-
-
 #include <cuda_runtime.h>
 
 
@@ -62,8 +58,3 @@ extern "C" axbStatus_t axbMemBackendRegister_CUDA(axbHandle_t handle)
   return 0;
 }
 
-#else
-
-axbStatus_t axbMemBackendRegister_CUDA(axbHandle_t handle) { return 0; }
-
-#endif

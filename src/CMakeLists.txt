@@ -13,9 +13,9 @@ if (ENABLE_CUDA)
                            general.c)
 ELSE(ENABLE_CUDA)
   add_library(libaxb  backend/mem/host.c
-                      backend/mem/cuda.cu
+                      backend/mem/cuda.c
                       backend/op/host.c
-                      backend/op/cuda.cu
+                      backend/op/cuda.c
                       backend/backend.c
                       vec.c
                       scalar.c
