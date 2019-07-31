@@ -2,7 +2,14 @@
 #define LIBAXB_GENERAL_H_
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
 #include "libaxb/backend.h"
+
+
+//#define AXB_ERRCHK(arg)     do { if (arg != 0) { fprintf(stderr, "ERROR in %s line %d: Code %d.\n", __FILE__, __LINE__, arg); assert( arg==0 ); return arg; } } while (0)
+#define AXB_ERRCHK(arg)
+
 
 struct axbHandle_s
 {

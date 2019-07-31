@@ -34,10 +34,7 @@ axbStatus_t axbScalarSetMemBackend(axbScalar_t scalar, axbMemBackend_t mem)
 }
 axbStatus_t axbScalarCreateEnd(axbScalar_t scalar)
 {
-  scalar->data = scalar->memBackend->op_malloc(sizeof(double), scalar->memBackend->impl);
-
-  // nothing to do -> scalar already created!
-  return 0;
+  return scalar->memBackend->op_malloc( &(scalar->data), sizeof(double), scalar->memBackend->impl);
 }
 
 axbStatus_t axbScalarSetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype)

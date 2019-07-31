@@ -79,7 +79,7 @@ axbStatus_t axbMemBackendGetName(axbMemBackend_t backend, const char **name);
 axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *mem_size);
 axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name);
 
-axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, void *(*func)(size_t, void *));
+axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, axbStatus_t (*func)(void **, size_t, void *));
 axbStatus_t axbMemBackendSetFree(axbMemBackend_t mem, axbStatus_t (*func)(void *, void *));
 
 axbStatus_t axbMemBackendMalloc(axbMemBackend_t mem, size_t num_bytes, void **ptr);
@@ -91,7 +91,7 @@ axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(voi
 axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n);
 axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n);
 
-
+axbStatus_t axbMemBackendSetDestroy(axbMemBackend_t mem, axbStatus_t (*func)(void*));
 axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem);
 
 
@@ -128,6 +128,7 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
 axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, int *ops_size);
 axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name);
 
+axbStatus_t axbOpBackendSetDestroy(axbOpBackend_t ops, axbStatus_t (*func)(void*));
 axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops);
 
 ///

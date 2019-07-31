@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <string.h>
 #include "libaxb.h"
 
 #include "libaxb/general.h"
@@ -30,6 +31,17 @@ axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *
   return 0;
 }
 
+axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name)
+{
+  *mem = NULL;
+  for (size_t i=0; i<handle->memBackends_size; ++i){
+    if ( strcmp(handle->memBackends[i]->name, name) == 0) {
+      *mem = handle->memBackends[i];
+      return 0;
+    }
+  }
+  return 0;
+}
 
 
 ///////////////
@@ -90,17 +102,18 @@ axbStatus_t axbFinalize(axbHandle_t handle)
   if (handle->init != 424242) return 424242;
   handle->init += 1; // helper to track multiple free's on handle
 
+  // free op backends
+  // Note: op-backends may depend on mem-backends, so it's important to free the op-backends first.
+  for (size_t i=0; i<handle->opBackends_size; ++i) {
+    axbOpBackendDestroy(handle->opBackends[i]);
+  }
+  free(handle->opBackends);
+
   // free mem backends
   for (size_t i=0; i<handle->memBackends_size; ++i) {
     axbMemBackendDestroy(handle->memBackends[i]);
   }
   free(handle->memBackends);
-
-  // free op backends
-  for (size_t i=0; i<handle->opBackends_size; ++i) {
-    axbOpBackendDestroy(handle->opBackends[i]);
-  }
-  free(handle->opBackends);
 
   free(handle);
   return 0;

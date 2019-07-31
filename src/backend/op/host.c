@@ -7,7 +7,7 @@
 #include "libaxb/general.h"
 
 
-axbStatus_t op_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
 {
   (void)aux_data;
 
@@ -26,16 +26,16 @@ axbStatus_t op_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
 axbStatus_t axbOpBackendRegister_Host(axbHandle_t handle)
 {
   axbOpBackend_t host_backend;
-  axbOpBackendCreate(&host_backend);
+  axbStatus_t status = axbOpBackendCreate(&host_backend); AXB_ERRCHK(status);
 
   // populate host_backend:
-  axbOpBackendSetName(host_backend, "host");
+  status = axbOpBackendSetName(host_backend, "host"); AXB_ERRCHK(status);
 
   axbOperationID_t op_id = 0;
-  axbOpBackendAddOperation(host_backend, "vec-axpy", (axbStatus_t (*)(void))op_axpy, NULL, &op_id);
+  status = axbOpBackendAddOperation(host_backend, "vec-axpy", (axbStatus_t (*)(void))op_axpy, NULL, &op_id); AXB_ERRCHK(status);
 
   // push into enclosing context identified by handle:
-  axbOpBackendRegister(handle, host_backend);
+  status = axbOpBackendRegister(handle, host_backend); AXB_ERRCHK(status);
 
   return 0;
 }

@@ -3,10 +3,12 @@
 #include "libaxb.h"
 #include "libaxb/backend.h"
 
-static void * host_malloc(size_t size_in_bytes, void *aux_data)
+static axbStatus_t host_malloc(void **ptr, size_t size_in_bytes, void *aux_data)
 {
   (void)aux_data;
-  return malloc(size_in_bytes);
+  *ptr = malloc(size_in_bytes);
+  if (*ptr == NULL) return 7812;
+  return 0;
 }
 
 static axbStatus_t host_free(void *ptr_to_free, void *aux_data)

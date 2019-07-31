@@ -51,13 +51,13 @@ mark_as_advanced(BOOSTPATH ENABLE_ASAN ENABLE_PEDANTIC_FLAGS)
 if (ENABLE_CUDA)
    find_package(CUDA REQUIRED)
    set(CUDA_ARCH_FLAG "-arch=sm_50" CACHE STRING "Use one out of sm_30, sm_32, sm_35, sm_37, sm_50,  sm_52, sm_53, sm_60, ...")
-   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "${CUDA_ARCH_FLAG}" "-DLIBAXB_WITH_CUDA")
+   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" "${CUDA_ARCH_FLAG}" "-DLIBAXB_ENABLE_CUDA")
 endif(ENABLE_CUDA)
 
 if (ENABLE_OPENMP)
    find_package(OpenMP REQUIRED)
-   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -DLIBAXB_WITH_OPENMP")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DLIBAXB_WITH_OPENMP")
+   set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}   -DLIBAXB_ENABLE_OPENMP")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DLIBAXB_ENABLE_OPENMP")
    set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS}    ${OpenMP_EXE_LINKER_FLAGS}")
    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${OpenMP_MODULE_LINKER_FLAGS}")
    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OpenMP_SHARED_LINKER_FLAGS}")
@@ -72,13 +72,13 @@ endif(ENABLE_ASAN)
 
 if (ENABLE_OPENCL)
   find_package(OpenCL REQUIRED)
-  include_directories(
-   "${PROJECT_SOURCE_DIR}"
-   ${OPENCL_INCLUDE_DIRS})
+  set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}  ${OpenMP_C_FLAGS}    -DLIBAXB_ENABLE_OPENCL")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -DLIBAXB_ENABLE_OPENCL")
 endif(ENABLE_OPENCL)
 
 # Set high warning level on GCC
 if(ENABLE_PEDANTIC_FLAGS)
+  set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -pedantic -Wextra -Wconversion")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra -Wconversion")
 endif()
 
@@ -115,7 +115,6 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   IF (DARWIN_VERSION GREATER 12)
     IF (ENABLE_CUDA)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")  # Mavericks and beyond need the new C++ STL with CUDA
-      # see https://github.com/viennacl/viennacl-dev/issues/106 for discussion
     ENDIF()
   ENDIF()
   INCLUDE_DIRECTORIES("/opt/local/include")

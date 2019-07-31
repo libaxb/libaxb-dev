@@ -3,18 +3,18 @@
 #include <stdio.h>
 #include "libaxb.h"
 #include "libaxb/backend.h"
+#include <assert.h>
 
 #include <cuda_runtime.h>
 
 
-static void * cuda_malloc(size_t size_in_bytes, void *aux_data)
+static axbStatus_t cuda_malloc(void **ptr, size_t size_in_bytes, void *aux_data)
 {
   (void)aux_data;
-  void *dev_ptr;
-  cudaError_t err = cudaMalloc(&dev_ptr, size_in_bytes);
-  if (err) return NULL;
-  //printf("Allocated device ptr %p\n", dev_ptr);
-  return dev_ptr;
+  cudaError_t err = cudaMalloc(ptr, size_in_bytes);
+  //printf("Allocated device ptr %p\n", *ptr);
+  assert(err == 0 && "cudaMalloc failed!");
+  return err;
 }
 
 static axbStatus_t cuda_free(void *ptr_to_free, void *aux_data)

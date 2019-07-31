@@ -2,9 +2,10 @@
 #include <string.h>
 
 #include "libaxb.h"
-
+#include "libaxb/general.h"
 #include "libaxb/backend/host.h"
 #include "libaxb/backend/cuda.h"
+#include "libaxb/backend/opencl.h"
 #include "libaxb/backend.h"
 
 axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
@@ -14,18 +15,12 @@ axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
   (*mem)->name_capacity = 10;
   (*mem)->name = malloc((*mem)->name_capacity);
   (*mem)->impl = NULL;
-  (*mem)->op_malloc = NULL;
-  (*mem)->op_free = NULL;
-  (*mem)->op_copyin = NULL;
+  (*mem)->op_malloc  = NULL;
+  (*mem)->op_free    = NULL;
+  (*mem)->op_copyin  = NULL;
   (*mem)->op_copyout = NULL;
+  (*mem)->destroy    = NULL;
 
-  return 0;
-}
-
-axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem)
-{
-  free(mem->name);
-  free(mem);
   return 0;
 }
 
@@ -33,6 +28,7 @@ axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle)
 {
   axbMemBackendRegister_Host(handle);
   axbMemBackendRegister_CUDA(handle);
+  axbMemBackendRegister_OpenCL(handle);
   return 0;
 }
 
@@ -56,7 +52,7 @@ axbStatus_t axbMemBackendGetName(axbMemBackend_t ops, const char **name)
   return 0;
 }
 
-axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, void *(*func)(size_t, void *))
+axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, axbStatus_t (*func)(void **, size_t, void *))
 {
   mem->op_malloc = func;
   return 0;
@@ -70,14 +66,12 @@ axbStatus_t axbMemBackendSetFree(axbMemBackend_t mem, axbStatus_t (*func)(void *
 
 axbStatus_t axbMemBackendMalloc(axbMemBackend_t mem, size_t num_bytes, void **ptr)
 {
-  *ptr = mem->op_malloc(num_bytes, mem->impl);
-  return 0;
+  return mem->op_malloc(ptr, num_bytes, mem->impl);
 }
 
 axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr)
 {
-  mem->op_free(ptr, mem->impl);
-  return 0;
+  return mem->op_free(ptr, mem->impl);
 }
 
 
@@ -94,12 +88,26 @@ axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(voi
 
 axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
-  mem->op_copyin(src, src_type, dest, dest_type, n, mem->impl);
-  return 0;
+  return mem->op_copyin(src, src_type, dest, dest_type, n, mem->impl);
 }
 axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
-  mem->op_copyout(src, src_type, dest, dest_type, n, mem->impl);
+  return mem->op_copyout(src, src_type, dest, dest_type, n, mem->impl);
+}
+
+axbStatus_t axbMemBackendSetDestroy(axbMemBackend_t mem, axbStatus_t (*func)(void*))
+{
+  mem->destroy = func;
+  return 0;
+}
+
+axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem)
+{
+  if (mem->destroy) {
+    axbStatus_t status = mem->destroy(mem->impl); AXB_ERRCHK(status);
+  }
+  free(mem->name);
+  free(mem);
   return 0;
 }
 
@@ -117,6 +125,8 @@ axbStatus_t axbOpBackendCreate(axbOpBackend_t *ops)
   (*ops)->op_table_capacity = 255;
   (*ops)->op_table_size = 0;
   (*ops)->op_table = malloc((*ops)->op_table_capacity*sizeof(axbOpDescriptor_t));
+
+  (*ops)->destroy = NULL;
 
   return 0;
 }
@@ -142,8 +152,17 @@ axbStatus_t axbOpBackendGetName(axbOpBackend_t ops, const char **name)
   return 0;
 }
 
+axbStatus_t axbOpBackendSetDestroy(axbOpBackend_t ops, axbStatus_t (*func)(void*))
+{
+  ops->destroy = func;
+  return 0;
+}
+
 axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops)
 {
+  if (ops->destroy) {
+    axbStatus_t status = ops->destroy(ops->impl); AXB_ERRCHK(status);
+  }
   free(ops->op_table);
   free(ops->name);
   free(ops);
@@ -174,8 +193,10 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
 
 axbStatus_t axbOpBackendRegisterDefaults(axbHandle_t handle)
 {
-  axbOpBackendRegister_Host(handle);
-  axbOpBackendRegister_CUDA(handle);
+  axbStatus_t status;
+  status = axbOpBackendRegister_Host(handle); AXB_ERRCHK(status);
+  status = axbOpBackendRegister_CUDA(handle); AXB_ERRCHK(status);
+  status = axbOpBackendRegister_OpenCL(handle); AXB_ERRCHK(status);
   return 0;
 }
 

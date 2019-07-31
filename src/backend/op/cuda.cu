@@ -35,16 +35,16 @@ static axbStatus_t op_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_
 extern "C" axbStatus_t axbOpBackendRegister_CUDA(axbHandle_t handle)
 {
   axbOpBackend_t cuda_backend;
-  axbOpBackendCreate(&cuda_backend);
+  axbStatus_t status = axbOpBackendCreate(&cuda_backend); AXB_ERRCHK(status);
 
   // populate host_backend:
-  axbOpBackendSetName(cuda_backend, "CUDA");
+  status = axbOpBackendSetName(cuda_backend, "CUDA"); AXB_ERRCHK(status);
 
   axbOperationID_t op_id = 0;
-  axbOpBackendAddOperation(cuda_backend, "vec-axpy", (axbStatus_t (*)(void))op_axpy, NULL, &op_id);
+  status = axbOpBackendAddOperation(cuda_backend, "vec-axpy", (axbStatus_t (*)(void))op_axpy, NULL, &op_id); AXB_ERRCHK(status);
 
   // push into enclosing context identified by handle:
-  axbOpBackendRegister(handle, cuda_backend);
+  status = axbOpBackendRegister(handle, cuda_backend); AXB_ERRCHK(status);
 
   return 0;
 }

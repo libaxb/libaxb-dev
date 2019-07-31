@@ -74,8 +74,9 @@ axbStatus_t axbVecCreateEnd(axbVec_t vec)
 {
   if (vec->size > 0) {
     //printf("Initializing vector for backend %s\n", vec->memBackend->name);
-    vec->data = vec->memBackend->op_malloc(sizeof(double) * vec->size, vec->memBackend->impl);
-    if (!vec->data) return 123; // out of memory
+
+    axbStatus_t status = vec->memBackend->op_malloc(&(vec->data), sizeof(double) * vec->size, vec->memBackend->impl);
+    return status;
   }
   return 0;
 }

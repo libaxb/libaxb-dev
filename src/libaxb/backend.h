@@ -9,11 +9,13 @@ struct axbMemBackend_s
   size_t name_capacity;
   char *name;
 
-  void *      (*op_malloc)(size_t, void*);
+  axbStatus_t (*op_malloc)(void**, size_t, void*);
   axbStatus_t (*op_free)  (void*, void*);
 
   axbStatus_t (*op_copyin) (void*, axbDataType_t, void*, axbDataType_t, size_t, void *);
   axbStatus_t (*op_copyout)(void*, axbDataType_t, void*, axbDataType_t, size_t, void *);
+
+  axbStatus_t (*destroy)(void*);
 
   void *impl;   //pimpl idiom for backends to drop in their specific stuff
 };
@@ -41,6 +43,8 @@ struct axbOpBackend_s
   size_t op_table_size;
   size_t op_table_capacity;
   axbOpDescriptor_t *op_table;
+
+  axbStatus_t (*destroy)(void*);
 
   // more operations to be added
   void *impl;
