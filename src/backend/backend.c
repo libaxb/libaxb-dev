@@ -16,6 +16,8 @@ axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
   (*mem)->impl = NULL;
   (*mem)->op_malloc = NULL;
   (*mem)->op_free = NULL;
+  (*mem)->op_copyin = NULL;
+  (*mem)->op_copyout = NULL;
 
   return 0;
 }
@@ -79,12 +81,12 @@ axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr)
 }
 
 
-axbStatus_t axbMemBackendSetCopyIn(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t))
+axbStatus_t axbMemBackendSetCopyIn(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
 {
   mem->op_copyin = func;
   return 0;
 }
-axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t))
+axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
 {
   mem->op_copyout = func;
   return 0;
@@ -92,12 +94,12 @@ axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(voi
 
 axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
-  mem->op_copyin(src, src_type, dest, dest_type, n);
+  mem->op_copyin(src, src_type, dest, dest_type, n, mem->impl);
   return 0;
 }
 axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
-  mem->op_copyout(src, src_type, dest, dest_type, n);
+  mem->op_copyout(src, src_type, dest, dest_type, n, mem->impl);
   return 0;
 }
 

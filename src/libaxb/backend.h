@@ -12,8 +12,8 @@ struct axbMemBackend_s
   void *      (*op_malloc)(size_t, void*);
   axbStatus_t (*op_free)  (void*, void*);
 
-  axbStatus_t (*op_copyin) (void*, axbDataType_t, void*, axbDataType_t, size_t);
-  axbStatus_t (*op_copyout)(void*, axbDataType_t, void*, axbDataType_t, size_t);
+  axbStatus_t (*op_copyin) (void*, axbDataType_t, void*, axbDataType_t, size_t, void *);
+  axbStatus_t (*op_copyout)(void*, axbDataType_t, void*, axbDataType_t, size_t, void *);
 
   void *impl;   //pimpl idiom for backends to drop in their specific stuff
 };

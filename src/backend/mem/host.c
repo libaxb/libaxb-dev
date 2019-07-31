@@ -16,7 +16,7 @@ static axbStatus_t host_free(void *ptr_to_free, void *aux_data)
   return 0;
 }
 
-static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
 
@@ -27,10 +27,11 @@ static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, ax
     d_dest[i] = d_src[i];
   }
 
+  (void)aux_data;
   return 0;
 }
 
-static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
 
@@ -41,6 +42,7 @@ static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, a
     d_dest[i] = d_src[i];
   }
 
+  (void)aux_data;
   return 0;
 }
 

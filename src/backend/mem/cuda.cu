@@ -25,18 +25,19 @@ static axbStatus_t cuda_free(void *ptr_to_free, void *aux_data)
 }
 
 
-static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+static axbStatus_t cuda_copyin(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 17590; // not yet supported
 
-  //printf("Calling CUDA memcopy host to device %p\n", dest);
+  (void)aux_data;
   return cudaMemcpy(dest, src, sizeof(double) * n, cudaMemcpyHostToDevice);
 }
 
-static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+static axbStatus_t cuda_copyout(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 17590; // not yet supported
-  //printf("Calling CUDA memcopy device %p to host\n", src);
+
+  (void)aux_data;
   return cudaMemcpy(dest, src, sizeof(double) * n, cudaMemcpyDeviceToHost);
 }
 
@@ -50,8 +51,8 @@ extern "C" axbStatus_t axbMemBackendRegister_CUDA(axbHandle_t handle)
   axbMemBackendSetMalloc(cuda_backend, cuda_malloc);
   axbMemBackendSetFree(cuda_backend, cuda_free);
 
-  axbMemBackendSetCopyIn(cuda_backend, host_copyin);
-  axbMemBackendSetCopyOut(cuda_backend, host_copyout);
+  axbMemBackendSetCopyIn(cuda_backend, cuda_copyin);
+  axbMemBackendSetCopyOut(cuda_backend, cuda_copyout);
 
   // push into enclosing context identified by handle:
   axbMemBackendRegister(handle, cuda_backend);
