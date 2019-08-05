@@ -183,15 +183,72 @@ axbStatus_t axbVecGetName(axbVec_t vec, const char **name);
 axbStatus_t axbVecSetValues(axbVec_t vec, void *values, axbDataType_t values_datatype);
 axbStatus_t axbVecGetValues(axbVec_t vec, void *values, axbDataType_t values_datatype);
 
+axbStatus_t axbVecDestroy(axbVec_t vec);
+
 
 // operations
 
+// initialize vector:
+axbStatus_t axbVecSet(axbVec_t x, void *value, axbDataType_t value_datatype);
+//TODO: axbStatus_t axbVecSetValues(axbVec_t x, void *indices, size_t num_indices, axbDataType_t indices_datatype, void *values, size_t num_values, axbDataType_t values_datatype);
+
+// in-place operations
+axbStatus_t axbVecSqrtAbs(axbVec_t x);
+/** @brief Sets all vector entries to zero */
+axbStatus_t axbVecZero(axbVec_t x);
+/** @brief Scales the vector x by a scalar factor alpha, i.e. x[i] <- alpha * x[i]  */
+axbStatus_t axbVecScale(axbVec_t x, axbScalar_t alpha);
+
+// reduction operations:
+/** @brief Computes the sum of entries in x. Usually faster than computing the inner product (x,1) with '1' being a vector of ones. */
+axbStatus_t axbVecSum(axbVec_t x, axbScalar_t sum);
+/** @brief Computes the dot-product (x,y) = y^H x, where H denotes the conjugate transpose of y. */
+axbStatus_t axbVecDot(axbVec_t x, axbVec_t y, axbScalar_t dot);
+/** @brief Computes the indefinite dot-product (x,y), i.e. no complex conjugation on either x or y */
+axbStatus_t axbVecTDot(axbVec_t x, axbVec_t y, axbScalar_t tdot);
+/** @brief Computes the inner products (x, y[0]), (x, y[1]), ..., (x, y[num_vecs-1]) */
+axbStatus_t axbVecMDot(axbVec_t x, size_t num_vecs, const axbVec_t *y, axbScalar_t *mdot);
+/** @brief Computes the 1-norm of the vector x */
+axbStatus_t axbVecNorm1(axbVec_t x, axbScalar_t norm);
+/** @brief Computes the 2-norm of the vector x */
+axbStatus_t axbVecNorm2(axbVec_t x, axbScalar_t norm);
+/** @brief Computes the inf-norm of the vector x */
+axbStatus_t axbVecNormInf(axbVec_t x, axbScalar_t norm);
+
+/** @brief Computes the element with the maximum real part and its location
+*
+*   @param idx    The smallest index of an element with the maximum value
+*/
+axbStatus_t axbVecMax(axbVec_t x, size_t *idx, axbScalar_t m);
+/** @brief Computes the element with the minimum real part and its location
+*
+*   @param idx    The smallest index of an element with the minimum value
+*/
+axbStatus_t axbVecMin(axbVec_t x, size_t *idx, axbScalar_t m);
+
+// vector-vector operations:
+/** @brief Assigns x to y */
+axbStatus_t axbVecCopy(axbVec_t x, axbVec_t y);
+/** @brief Swaps the vectors x and y */
+axbStatus_t axbVecSwap(axbVec_t x, axbVec_t y);
+
 /** @brief y = alpha * x + y */
 axbStatus_t axbVecAXPY(axbVec_t y, axbScalar_t alpha, axbVec_t x);
-// more to follow
+/** @brief y = x + alpha * y */
+axbStatus_t axbVecAYPX(axbVec_t y, axbScalar_t alpha, axbVec_t x);
+/** @brief z = alpha * x + beta * y + gamma * z */
+axbStatus_t axbVecAXPYPCZ(axbVec_t z, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma, axbVec_t x, axbVec_t y);
+/** @brief w = alpha * x + y */
+axbStatus_t axbVecWAXPY(axbVec_t w, axbScalar_t alpha, axbVec_t x, axbVec_t y);
+/** @brief y = y + \sum_i alpha[i] * x[i] */
+axbStatus_t axbVecMAXPY(axbVec_t y, size_t num_vecs, const axbScalar_t *alpha, const axbVec_t *x);
 
-
-axbStatus_t axbVecDestroy(axbVec_t vec);
+/** @brief w = x .* y  (component-wise multiplication) */
+axbStatus_t axbVecPointwiseMult(axbVec_t w, axbVec_t x, axbVec_t y);
+/** @brief w = x ./ y  (component-wise division) */
+axbStatus_t axbVecPointwiseDivide(axbVec_t w, axbVec_t x, axbVec_t y);
+/** @brief Computes inner products s*t and t*t */
+axbStatus_t axbVecDotNorm2(axbVec_t s, axbVec_t t, axbScalar_t *dot_st, axbScalar_t *norm_tt);
 
 #ifdef __cplusplus
 } // extern "C"
