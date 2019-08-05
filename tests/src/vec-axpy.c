@@ -10,9 +10,36 @@
 int main(int argc, char **argv)
 {
   axbHandle_t axbHandle;
+  const char *mem_backend_name = argv[1];
+  const char *op_backend_name = argv[2];
+
+  if (argc < 2) {
+    fprintf(stderr, "Missing argument: MemoryBackend\n");
+    return EXIT_FAILURE;
+  }
+  else if (argc == 2) { // mem backend equals op backend
+    op_backend_name = argv[1];
+  }
 
   printf("Initializing libaxb...\n");
   AXB_ERR_CHECK(axbInit(&axbHandle));
+
+  axbMemBackend_t mem_backend;
+  AXB_ERR_CHECK(axbMemBackendGetByName(axbHandle, &mem_backend, mem_backend_name));
+  if (!mem_backend) {
+    fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);
+    return EXIT_FAILURE;
+  }
+  printf("Using memory backend %s\n", mem_backend_name);
+
+  axbOpBackend_t op_backend;
+  AXB_ERR_CHECK(axbOpBackendGetByName(axbHandle, &op_backend, op_backend_name));
+  if (!op_backend) {
+    fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);
+    return EXIT_FAILURE;
+  }
+  printf("Using op backend %s\n", op_backend_name);
+
 
   double ones[] = {1, 1, 1, 1, 1};
   axbVec_t x;

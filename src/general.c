@@ -24,7 +24,7 @@ axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t mem)
   return 0;
 }
 
-axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *mem_size)
+axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, size_t *mem_size)
 {
   *mem = handle->memBackends;
   *mem_size = handle->memBackends_size;
@@ -46,7 +46,7 @@ axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, con
 
 ///////////////
 
-axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t mem)
+axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t ops)
 {
   // check if there is still room for another backend. If not, resize array:
   if (handle->opBackends_size == handle->opBackends_capacity) {
@@ -59,18 +59,29 @@ axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t mem)
     free(old_array);
   }
 
-  handle->opBackends[handle->opBackends_size] = mem;
+  handle->opBackends[handle->opBackends_size] = ops;
   handle->opBackends_size += 1;
   return 0;
 }
 
-axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, int *ops_size)
+axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, size_t *ops_size)
 {
   *ops = handle->opBackends;
   *ops_size = handle->opBackends_size;
   return 0;
 }
 
+axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name)
+{
+  *ops = NULL;
+  for (size_t i=0; i<handle->opBackends_size; ++i){
+    if ( strcmp(handle->opBackends[i]->name, name) == 0) {
+      *ops = handle->opBackends[i];
+      return 0;
+    }
+  }
+  return 0;
+}
 
 /////////////////
 

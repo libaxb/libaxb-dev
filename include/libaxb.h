@@ -76,7 +76,7 @@ axbStatus_t axbMemBackendGetName(axbMemBackend_t backend, const char **name);
  * @param mem_size   In: Maximum number of elements to be written to `mem`. Out: Number of actual elements in `mem`.
 *  @return          Returns a success- or error-code. @see axbErrorGetName(), axbErrorGetString()
  */
-axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, int *mem_size);
+axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, size_t *mem_size);
 axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name);
 
 axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, axbStatus_t (*func)(void **, size_t, void *));
@@ -125,7 +125,7 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
  * @param ops        Pointer to multiple operation backend handles.
  * @param ops_size   In: Maximum number of elements in ops, Out: Actual number of handles in `ops`.
 */
-axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, int *ops_size);
+axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, size_t *ops_size);
 axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name);
 
 axbStatus_t axbOpBackendSetDestroy(axbOpBackend_t ops, axbStatus_t (*func)(void*));

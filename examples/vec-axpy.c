@@ -20,20 +20,20 @@ int main(int argc, char **argv)
 
   printf("Available memory backends:\n");
   axbMemBackend_t *mem_backends;
-  int num_backends;
-  axbMemBackendGetAll(axbHandle, &mem_backends, &num_backends);
-  for (int i=0; i<num_backends; ++i) {
+  size_t num_backends;
+  AXB_ERR_CHECK(axbMemBackendGetAll(axbHandle, &mem_backends, &num_backends));
+  for (size_t i=0; i<num_backends; ++i) {
     const char *backend_name;
-    axbMemBackendGetName(mem_backends[i], &backend_name);
+    AXB_ERR_CHECK(axbMemBackendGetName(mem_backends[i], &backend_name));
     printf(" - %s\n", backend_name);
   }
 
   printf("Available operation backends:\n");
   axbOpBackend_t *op_backends;
-  axbOpBackendGetAll(axbHandle, &op_backends, &num_backends);
-  for (int i=0; i<num_backends; ++i) {
+  AXB_ERR_CHECK(axbOpBackendGetAll(axbHandle, &op_backends, &num_backends));
+  for (size_t i=0; i<num_backends; ++i) {
     const char *backend_name;
-    axbOpBackendGetName(op_backends[i], &backend_name);
+    AXB_ERR_CHECK(axbOpBackendGetName(op_backends[i], &backend_name));
     printf(" - %s\n", backend_name);
   }
 
