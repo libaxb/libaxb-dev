@@ -47,7 +47,7 @@ static const char * my_compute_program =
 
 static axbStatus_t op_axpy_opencl(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
 {
-  cl_int err;
+  cl_int status;
   axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
 
   cl_mem cl_y     = y->data;
@@ -58,16 +58,16 @@ static axbStatus_t op_axpy_opencl(axbVec_t y, axbScalar_t alpha, axbVec_t x, voi
   cl_kernel kernel = op_opencl->kernels[0];
 
   /* Set kernel arguments */
-  err = clSetKernelArg(kernel, 0, sizeof(cl_mem),  (void *)&cl_y);     AXB_ERRCHK(err);
-  err = clSetKernelArg(kernel, 1, sizeof(cl_mem),  (void *)&cl_alpha); AXB_ERRCHK(err);
-  err = clSetKernelArg(kernel, 2, sizeof(cl_mem),  (void *)&cl_x);     AXB_ERRCHK(err);
-  err = clSetKernelArg(kernel, 3, sizeof(cl_uint), (void *)&cl_size);  AXB_ERRCHK(err);
+  status = clSetKernelArg(kernel, 0, sizeof(cl_mem),  (void *)&cl_y);     AXB_ERRCHK(status);
+  status = clSetKernelArg(kernel, 1, sizeof(cl_mem),  (void *)&cl_alpha); AXB_ERRCHK(status);
+  status = clSetKernelArg(kernel, 2, sizeof(cl_mem),  (void *)&cl_x);     AXB_ERRCHK(status);
+  status = clSetKernelArg(kernel, 3, sizeof(cl_uint), (void *)&cl_size);  AXB_ERRCHK(status);
 
   /* Run the kernel */
   size_t global_work_size = 256;
   size_t local_work_size = 256;
-  err = clEnqueueNDRangeKernel(op_opencl->queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL); AXB_ERRCHK(err);
-  err = clFinish(op_opencl->queue); AXB_ERRCHK(err);
+  status = clEnqueueNDRangeKernel(op_opencl->queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL); AXB_ERRCHK(status);
+  status = clFinish(op_opencl->queue); AXB_ERRCHK(status);
 
   return 0;
 }
@@ -95,11 +95,10 @@ static axbStatus_t axbOpBackendInit_OpenCL(axbHandle_t handle, axbOpBackend_t op
   op_opencl->programs_size = 0;
 
   size_t kernel_len = strlen(my_compute_program);
-  cl_int err;
-  op_opencl->programs[op_opencl->programs_size] = clCreateProgramWithSource(op_opencl->context, 1, &my_compute_program, &kernel_len, &err); AXB_ERRCHK(err);
+  op_opencl->programs[op_opencl->programs_size] = clCreateProgramWithSource(op_opencl->context, 1, &my_compute_program, &kernel_len, &status); AXB_ERRCHK(status);
   op_opencl->programs_size += 1;
 
-  err = clBuildProgram(op_opencl->programs[0], 1, mem_opencl->devices, NULL, NULL, NULL); AXB_ERRCHK(err);
+  status = clBuildProgram(op_opencl->programs[0], 1, mem_opencl->devices, NULL, NULL, NULL); AXB_ERRCHK(status);
 
   //
   // Create OpenCL kernels:
@@ -109,7 +108,7 @@ static axbStatus_t axbOpBackendInit_OpenCL(axbHandle_t handle, axbOpBackend_t op
   op_opencl->kernels = malloc(sizeof(cl_kernel) * op_opencl->kernels_capacity);
   op_opencl->kernels_size = 0;
 
-  op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "axpy", &err); AXB_ERRCHK(err);
+  op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "axpy", &status); AXB_ERRCHK(status);
   op_opencl->kernels_size += 1;
 
   return 0;
@@ -117,15 +116,13 @@ static axbStatus_t axbOpBackendInit_OpenCL(axbHandle_t handle, axbOpBackend_t op
 
 static axbStatus_t destroyOpenCLContext(void *impl)
 {
-  cl_int err;
-
   axbOpOpenCL_t opencl_context = (axbOpOpenCL_t)impl;
   for (size_t i=0; i<opencl_context->kernels_size; ++i) {
-    err = clReleaseKernel(opencl_context->kernels[i]); AXB_ERRCHK(err);
+    cl_int status = clReleaseKernel(opencl_context->kernels[i]); AXB_ERRCHK(status);
   }
   free(opencl_context->kernels);
   for (size_t i=0; i<opencl_context->programs_size; ++i) {
-    err = clReleaseProgram(opencl_context->programs[i]); AXB_ERRCHK(err);
+    cl_int status = clReleaseProgram(opencl_context->programs[i]); AXB_ERRCHK(status);
   }
   free(opencl_context->programs);
   free(opencl_context);
