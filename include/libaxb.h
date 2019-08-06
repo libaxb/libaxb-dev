@@ -145,6 +145,7 @@ axbStatus_t axbScalarSetBackend(axbScalar_t scalar, axbMemBackend_t mem);
 axbStatus_t axbScalarCreateEnd(axbScalar_t scalar);
 
 axbStatus_t axbScalarSetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype);
+axbStatus_t axbScalarGetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype);
 
 // convenience routine?
 axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value, axbDataType_t datatype, axbMemBackend_t mem);
@@ -189,10 +190,11 @@ axbStatus_t axbVecDestroy(axbVec_t vec);
 // operations
 
 // initialize vector:
-axbStatus_t axbVecSet(axbVec_t x, void *value, axbDataType_t value_datatype);
+axbStatus_t axbVecSet(axbVec_t x, axbScalar_t value);
 //TODO: axbStatus_t axbVecSetValues(axbVec_t x, void *indices, size_t num_indices, axbDataType_t indices_datatype, void *values, size_t num_values, axbDataType_t values_datatype);
 
 // in-place operations
+/** @brief Replaces all entries of the vector with the sqrt of the absolute value */
 axbStatus_t axbVecSqrtAbs(axbVec_t x);
 /** @brief Sets all vector entries to zero */
 axbStatus_t axbVecZero(axbVec_t x);
@@ -214,6 +216,8 @@ axbStatus_t axbVecNorm1(axbVec_t x, axbScalar_t norm);
 axbStatus_t axbVecNorm2(axbVec_t x, axbScalar_t norm);
 /** @brief Computes the inf-norm of the vector x */
 axbStatus_t axbVecNormInf(axbVec_t x, axbScalar_t norm);
+/** @brief Computes the inner product s*t and the 2-norm of t */
+axbStatus_t axbVecDotNorm2(axbVec_t s, axbVec_t t, axbScalar_t dot_st, axbScalar_t norm_t);
 
 /** @brief Computes the element with the maximum real part and its location
 *
@@ -237,7 +241,7 @@ axbStatus_t axbVecAXPY(axbVec_t y, axbScalar_t alpha, axbVec_t x);
 /** @brief y = x + alpha * y */
 axbStatus_t axbVecAYPX(axbVec_t y, axbScalar_t alpha, axbVec_t x);
 /** @brief z = alpha * x + beta * y + gamma * z */
-axbStatus_t axbVecAXPYPCZ(axbVec_t z, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma, axbVec_t x, axbVec_t y);
+axbStatus_t axbVecAXPBYPCZ(axbVec_t z, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma, axbVec_t x, axbVec_t y);
 /** @brief w = alpha * x + y */
 axbStatus_t axbVecWAXPY(axbVec_t w, axbScalar_t alpha, axbVec_t x, axbVec_t y);
 /** @brief y = y + \sum_i alpha[i] * x[i] */
@@ -247,8 +251,6 @@ axbStatus_t axbVecMAXPY(axbVec_t y, size_t num_vecs, const axbScalar_t *alpha, c
 axbStatus_t axbVecPointwiseMult(axbVec_t w, axbVec_t x, axbVec_t y);
 /** @brief w = x ./ y  (component-wise division) */
 axbStatus_t axbVecPointwiseDivide(axbVec_t w, axbVec_t x, axbVec_t y);
-/** @brief Computes inner products s*t and t*t */
-axbStatus_t axbVecDotNorm2(axbVec_t s, axbVec_t t, axbScalar_t *dot_st, axbScalar_t *norm_tt);
 
 #ifdef __cplusplus
 } // extern "C"

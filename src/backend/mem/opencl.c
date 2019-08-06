@@ -130,6 +130,7 @@ axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle)
 
 axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle)
 {
+  (void)handle;
   return 0;
 }
 

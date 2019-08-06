@@ -1,15 +1,15 @@
 include(CTest)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-ADD_EXECUTABLE(test-vec-axpy src/vec-axpy.c)
-target_link_libraries(test-vec-axpy   libaxb)
+ADD_EXECUTABLE(test-vec-ops src/vec-ops.c)
+target_link_libraries(test-vec-ops   libaxb m)
 
-ADD_TEST(vec-axpy-host test-vec-axpy "host")
+ADD_TEST(vec-ops-host test-vec-ops "host")
 
 if (ENABLE_CUDA)
-  ADD_TEST(vec-axpy-CUDA test-vec-axpy "CUDA")
+  ADD_TEST(vec-ops-CUDA test-vec-ops "CUDA")
 endif(ENABLE_CUDA)
 
 if (ENABLE_OPENCL)
-  ADD_TEST(vec-axpy-OpenCL test-vec-axpy "OpenCL")
+  ADD_TEST(vec-ops-OpenCL test-vec-ops "OpenCL")
 endif(ENABLE_OPENCL)

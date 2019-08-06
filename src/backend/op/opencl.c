@@ -156,6 +156,7 @@ axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle)
 
 axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle)
 {
+  (void)handle;
   return 0;
 }
 #endif

@@ -30,3 +30,5 @@ IF (ENABLE_OPENCL)
   include_directories(${OPENCL_INCLUDE_DIRS})
   target_link_libraries(libaxb ${OPENCL_LIBRARIES})
 ENDIF(ENABLE_OPENCL)
+
+target_link_libraries(libaxb m)
