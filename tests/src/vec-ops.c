@@ -19,7 +19,7 @@ axbStatus_t check_equal_scalar(axbScalar_t alpha, double a, const char *test_des
   if (fabs(rel_diff) > 0) rel_diff /= fmax;
 
   if (rel_diff > TEST_EPSILON) {
-    fprintf(stderr, "ERROR: Test %s failed with relative error %g\n Aborting...\n", test_desc, rel_diff);
+    fprintf(stderr, "ERROR: Test %s failed with relative error %g: reference %g vs. libaxb %g\n Aborting...\n", test_desc, rel_diff, a, t);
     exit(EXIT_FAILURE);
   }
 
@@ -40,7 +40,7 @@ axbStatus_t check_equal(axbVec_t x, double *y, double *temp, const char *test_de
     if (fabs(rel_diff) > 0) rel_diff /= fmax;
 
     if (rel_diff > TEST_EPSILON) {
-      fprintf(stderr, "ERROR: Test %s failed with relative error %g\n Aborting...\n", test_desc, rel_diff);
+      fprintf(stderr, "ERROR: Test %s failed with relative error %g: reference %g vs. libaxb %g\n Aborting...\n", test_desc, rel_diff, y[i], temp[i]);
       exit(EXIT_FAILURE);
     }
   }
