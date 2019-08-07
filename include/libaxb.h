@@ -12,8 +12,10 @@
 #include <stdlib.h>
 
 typedef enum {
+ AXB_INT_16,
  AXB_INT_32,
  AXB_INT_64,
+ AXB_REAL_HALF,
  AXB_REAL_FLOAT,
  AXB_REAL_DOUBLE,
  AXB_COMPLEX_FLOAT,
@@ -131,9 +133,9 @@ axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const
 axbStatus_t axbOpBackendSetDestroy(axbOpBackend_t ops, axbStatus_t (*func)(void*));
 axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops);
 
-///
-////////// Scalar
-///
+/*
+ * Scalar
+ */
 
 /** @brief Opaque handle to a scalar */
 struct axbScalar_s;
@@ -153,9 +155,9 @@ axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value
 axbStatus_t axbScalarDestroy(axbScalar_t scalar);
 
 
-///
-////////// Vectors
-///
+/*
+ * Vectors
+ */
 
 /** @brief Opaque handle to a vector (dense or sparse) */
 struct axbVec_s;
@@ -251,6 +253,193 @@ axbStatus_t axbVecMAXPY(axbVec_t y, size_t num_vecs, const axbScalar_t *alpha, c
 axbStatus_t axbVecPointwiseMult(axbVec_t w, axbVec_t x, axbVec_t y);
 /** @brief w = x ./ y  (component-wise division) */
 axbStatus_t axbVecPointwiseDivide(axbVec_t w, axbVec_t x, axbVec_t y);
+
+
+
+
+
+
+/*
+ * Matrices
+ */
+
+/** @brief Opaque handle to a matrix (dense or sparse) */
+struct axbMat_s;
+typedef struct axbMat_s *axbMat_t;
+
+/** @brief Creates the memory representing the matrix object, starting initialization.
+ *
+ * Customize the matrix via calls to axbMatSetSizes(), axbMatSetCSRIndexTypes(), axbMatSetDataType(), axbMatSetMemBackend(), axbMatSetOpBackend(), axbMatSetStorageType()
+ * A call to axbMatCreateEnd() will complete the initialization.
+ *
+ * @param handle     The surrounding axb environment
+ * @param mat        Pointer to the matrix object to be created
+ */
+axbStatus_t axbMatCreateBegin(axbHandle_t handle, axbMat_t *mat);
+
+/** @brief Sets the matrix dimensions of the matrix
+ *
+ * @param mat      The matrix for which the size should be set
+ * @param num_rows The number of rows of the matrix. Must be larger than zero.
+ * @param num_cols The number of columns of the matrix. Must be larger than zero.
+ */
+axbStatus_t axbMatSetSizes(axbMat_t mat, size_t num_rows, size_t num_cols);
+
+/** @brief Returns the number of rows and columns of the matrix */
+axbStatus_t axbMatGetSizes(axbMat_t mat, const size_t *num_rows, const size_t *num_cols);
+
+/** @brief Specifies the index types to be used when the matrix is stored in a CSR format (i.e. AXB_STORAGE_CSR or AXB_STORAGE_COMPRESSED_CSR).
+ *
+ * Usually AXB_INT_32 is fine for the indices (up to ~2 billion nonzeros).
+ * Larger problems should try with row_type of AXB_INT_64 first (while still benefitting from faster execution due to 32-bit column indices).
+ * Only for matrices with a few rows and MANY columns it may be required to set col_type to AXB_INT_64.
+ *
+ * Must be called after axbMatCreateBegin() and before axbMatCreateEnd() for the particular matrix.
+ *
+ * @param mat         The matrix for which the index types should be set
+ * @param row_type    The index type to use for the row-markers in the CSR format. Default: AXB_INT_32
+ * @param col_type    The index type to use for the column indices in the CSR format. Default: AXB_INT_32
+ */
+axbStatus_t axbMatSetCSRIndexTypes(axbMat_t mat, axbDataType_t row_type, axbDataType_t col_type);
+
+/** @brief Returns the index data types used for the row-markers (row_type) and the column indices (col_type) for the CSR format. */
+axbStatus_t axbMatGetCSRIndexTypes(axbMat_t mat, const axbDataType_t *row_type, const axbDataType_t *col_type);
+
+/** @brief Sets the data type used for numerical entries in 'mat'. Default: AXB_REAL_DOUBLE
+*
+*  Must be called after axbMatCreateBegin() and before axbMatCreateEnd() for the particular matrix.
+*/
+axbStatus_t axbMatSetDataType(axbMat_t mat, axbDataType_t datatype);
+
+/** @brief Returns the data type used for the numerical entries in 'mat' */
+axbStatus_t axbMatGetDataType(axbMat_t mat, const axbDataType_t *datatype);
+
+/** @brief Sets the memory backend to be used with the matrix.
+ *
+ *  Must be called after axbMatCreateBegin() and before axbMatCreateEnd() for the particular matrix.
+ */
+axbStatus_t axbMatSetMemBackend(axbMat_t mat, axbMemBackend_t backend);
+/** @brief Returns the memory backend currently used by the matrix */
+axbStatus_t axbMatGetMemBackend(axbMat_t mat, const axbMemBackend_t *backend);
+
+/** @brief Sets the operation backend used for running operations on the matrix */
+axbStatus_t axbMatSetOpBackend(axbMat_t mat, axbOpBackend_t backend);
+
+/** @brief Returns the operation backend currently in use for the matrix */
+axbStatus_t axbMatGetOpBackend(axbMat_t mat, const axbOpBackend_t *backend);
+
+typedef enum {
+ AXB_STORAGE_CSR = 0,           /// standard CSR format
+ AXB_STORAGE_COMPRESSED_CSR,    /// compressed CSR format (suitable for matrices where most rows are zero)
+ AXB_STORAGE_DENSE              /// row-major dense format
+} axbMatStorage_t;
+
+/** @brief Sets the internal storage format for the matrix.
+ *
+ * Must be called after axbMatCreateBegin() and before axbMatCreateEnd() for the particular matrix
+ */
+axbStatus_t axbMatSetStorageType(axbMat_t mat, axbMatStorage_t storage);
+
+/** @brief Returns the internal storage format used by the matrix */
+axbStatus_t axbMatGetStorageType(axbMat_t mat, axbMatStorage_t *storage);
+
+axbStatus_t axbMatCreateEnd(axbMat_t mat);
+
+/** @brief Sets the name for the matrix */
+axbStatus_t axbMatSetName(axbMat_t mat, const char *name);
+/** @brief Returns the name of the matrix in the array 'name' (up to max_name_size characters including terminating zero-byte) */
+axbStatus_t axbMatGetName(axbMat_t mat, const char *name, size_t max_name_size);
+
+/** @brief Populates the matrix with the provided values (row-major).
+ *
+ * @param mat               The matrix to be filled
+ * @param values            Pointer to the values. Must be of size [number of rows] * [number of columns].
+ * @param values_datatype   Data type descriptor for the values array (e.g. AXB_REAL_DOUBLE)
+ */
+axbStatus_t axbMatSetValuesDense(axbMat_t mat, void *values, axbDataType_t values_datatype);
+
+/** @brief Returns all values (including zeros) for the matrix in a row-major fashion.
+ *
+ * @param mat               The matrix for which the values should be returned
+ * @param values            Pointer to the values. Must be at least of size [number of rows] * [number of columns].
+ * @param values_datatype   Data type descriptor for the values array (e.g. AXB_REAL_DOUBLE)
+ */
+axbStatus_t axbMatGetValuesDense(axbMat_t mat, void *values, axbDataType_t values_datatype);
+
+/** @brief Returns the number of nonzero entries in 'mat'
+ *
+ * @param mat           Matrix (either sparse or dense)
+ * @param num_nonzeros  The number of nonzeros
+ */
+axbStatus_t axbMatGetNonzerosSize(axbMat_t mat, size_t *num_nonzeros);
+
+/** @brief Sets the values of the matrix based on data in CSR format (sparse matrix)
+ *
+ *  Example for CSR for the matrix
+ *    ( 1    0    2 )
+ *    ( 3    0    0 )
+ *    ( 0    4    5 )
+ *  row_markers:   0,    2, 3,    5   [size num_rows + 1]
+ *  col_indices:   0, 2, 0, 1, 2      [size num_nonzeros]
+ *  values:        1, 2, 3, 4, 5      [size num_nonzeros]
+ *
+ * Can be used for dense matrices as well (but will not be efficient if there are no zeros in the matrix)
+ *
+ * @param row_markers    Entry points for each row into 'col_indices' and 'values'
+ * @param col_indices    Column indices in ascending order (!)
+ * @param values         The values to be set at the particular row and column
+ */
+axbStatus_t axbMatSetValuesCSR(axbMat_t mat, void *row_markers, axbDataType_t row_markers_datatype, void *col_indices, axbDataType_t col_indices_datatype, void *values, axbDataType_t values_datatype, size_t num_values);
+
+/** @brief Returns the values of the matrix in CSR format.
+ *
+ * Can be used for dense matrices as well (but will not be efficient if there are no zeros in the matrix)
+ *
+ * @see axbMatSetValuesCSR
+ */
+axbStatus_t axbMatGetValuesCSR(axbMat_t mat, void *row_markers, axbDataType_t row_markers_datatype, void *col_indices, axbDataType_t col_indices_datatype, void *values, axbDataType_t values_datatype);
+
+/** @brief Destroys the matrix. */
+axbStatus_t axbMatDestroy(axbMat_t mat);
+
+
+
+// operations
+
+/** @brief Computes the matrix-vector product A * x for a matrix A and a vector x.
+ *
+ * @param A  The matrix
+ * @param x  The vector to be multiplied with A
+ * @param Ax The result vector. The size of Ax needs to be the same as the number of rows of A.
+ */
+axbStatus_t axbMatVec(axbMat_t A, axbVec_t x, axbVec_t Ax);
+
+/** @brief Computes the transposed matrix-vector product A^T * x for a matrix A and a vector x.
+ *
+ * @param A   The matrix
+ * @param x   The vector to be multiplied with A
+ * @param ATx The result vector. The size of ATx needs to be the same as the number of columns of A.
+ */
+axbStatus_t axbMatTVec(axbMat_t A, axbVec_t x, axbVec_t ATx);
+
+/** @brief Computes the matrix-matrix product A * B.
+ *
+ * @param A   The left factor. The number of columns in A must match the number of rows in B.
+ * @param B   The right factor. The number of rows in B must match the number of columns in A.
+ * @param AB  The result matrix. Will be newly created based on A and B.
+ */
+axbStatus_t axbMatMat(axbMat_t A, axbMat_t B, axbMat_t *AB);
+
+/** @brief Computes the transpose A^T of A
+ *
+ * @param A   The matrix to be transposed
+ * @param AT  The result of transposing A. Will be newly created based on A.
+ */
+axbStatus_t axbMatTrans(axbMat_t A, axbMat_t *AT);
+
+// TODO: Add more operations
+
+
 
 #ifdef __cplusplus
 } // extern "C"
