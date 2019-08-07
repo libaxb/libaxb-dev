@@ -1,6 +1,8 @@
 include(CTest)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
+include_directories(${PROJECT_SOURCE_DIR}/tests/src)
+
 ADD_EXECUTABLE(test-vec-ops src/vec-ops.c)
 target_link_libraries(test-vec-ops   libaxb m)
 
