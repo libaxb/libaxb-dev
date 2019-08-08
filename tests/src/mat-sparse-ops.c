@@ -11,11 +11,76 @@
 
 axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
 {
-  // TODO: fill
-  (void)A;
-  (void)B;
-  (void)x0;
-  (void)x1;
+  size_t rows, cols, nonzeros;
+  AXB_ERR_CHECK(axbMatGetSizes(A, &rows, &cols));
+  AXB_ERR_CHECK(axbMatGetNonzerosSize(A, &nonzeros));
+  int *A_row_markers = malloc(sizeof(int) * (rows+1));
+  int *A_col_indices = malloc(sizeof(int) * nonzeros);
+  double *A_values   = malloc(sizeof(double) * nonzeros);
+
+  double *temp = malloc(sizeof(double) * (rows+1));
+  double *x_host = malloc(sizeof(double) * (rows+1));
+  double *y_host = malloc(sizeof(double) * (rows+1));
+
+  AXB_ERR_CHECK(axbMatGetValuesCSR(A, A_row_markers, AXB_INT_32, A_col_indices, AXB_INT_32, A_values, AXB_REAL_DOUBLE));
+  AXB_ERR_CHECK(axbVecGetValues(x0, x_host, AXB_REAL_DOUBLE));
+
+  // AXB_OP_MAT_VEC
+  AXB_ERR_CHECK(axbMatVec(A, x0, x1));
+  for (size_t i=0; i<rows; ++i) {  // reference calculation
+    double val = 0;
+    for (int j=A_row_markers[i]; j<A_row_markers[i+1]; ++j) {
+      val += A_values[j] * x_host[A_col_indices[j]];
+    }
+    y_host[i] = val;
+  }
+  check_equal(x1, y_host, temp, "axbMatVec");
+
+  // AXB_OP_MAT_TVEC
+  AXB_ERR_CHECK(axbMatTVec(A, x0, x1));
+  for (size_t i=0; i<cols; ++i) y_host[i] = 0;
+  for (size_t i=0; i<rows; ++i) {  // reference calculation
+    for (int j=A_row_markers[i]; j<A_row_markers[i+1]; ++j) {
+      y_host[A_col_indices[j]] += A_values[j] * x_host[i];
+    }
+  }
+  check_equal(x1, y_host, temp, "axbMatTVec");
+
+  // Skipping matrix-matrix multiplication test
+
+  // AXB_OP_MAT_TVEC
+  AXB_ERR_CHECK(axbMatTVec(A, x0, x1));
+  for (size_t i=0; i<cols; ++i) y_host[i] = 0;
+  for (size_t i=0; i<rows; ++i) {  // reference calculation
+    for (int j=A_row_markers[i]; j<A_row_markers[i+1]; ++j) {
+      y_host[A_col_indices[j]] += A_values[j] * x_host[i];
+    }
+  }
+  check_equal(x1, y_host, temp, "axbMatTVec");
+
+
+  // AXB_OP_MAT_TRANS
+  axbMat_t C, D;
+  AXB_ERR_CHECK(axbMatTrans(A, &C));
+  AXB_ERR_CHECK(axbMatVec(C, x0, x1));
+  check_equal(x1, y_host, temp, "axbMatTrans (via axbMatVec)");
+  AXB_ERR_CHECK(axbMatTrans(C, &D));
+  check_equal(x1, y_host, temp, "axbMatTrans (double-transposition)");
+
+
+  //
+  // clean up:
+  //
+  AXB_ERR_CHECK(axbMatDestroy(D));
+  AXB_ERR_CHECK(axbMatDestroy(C));
+
+  free(A_row_markers);
+  free(A_col_indices);
+  free(A_values);
+
+  free(temp);
+  free(x_host);
+  free(y_host);
 
   return 0;
 }
@@ -25,7 +90,8 @@ axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
 axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t ops)
 {
   axbVec_t x0, x1;
-  size_t n = 1297;
+  size_t n = 154534;
+  double *temp = malloc(sizeof(double) * n);
 
   // create vectors:
 #define AXB_INIT_VEC(VECX) do { \
@@ -34,6 +100,7 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
   AXB_ERR_CHECK(axbVecSetMemBackend(VECX, mem)); \
   AXB_ERR_CHECK(axbVecSetOpBackend(VECX, ops)); \
   AXB_ERR_CHECK(axbVecCreateEnd(VECX)); \
+  initVecRandom(VECX, temp); \
 } while (0)
 
   AXB_INIT_VEC(x0);
@@ -45,16 +112,18 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
   AXB_ERR_CHECK(axbMatSetSizes(A, n, n));
   AXB_ERR_CHECK(axbMatSetMemBackend(A, mem));
   AXB_ERR_CHECK(axbMatSetOpBackend(A, ops));
-  AXB_ERR_CHECK(axbMatSetStorageType(A, AXB_STORAGE_COMPRESSED_CSR));
+  AXB_ERR_CHECK(axbMatSetStorageType(A, AXB_STORAGE_CSR));
   AXB_ERR_CHECK(axbMatCreateEnd(A));
+  AXB_ERR_CHECK(initMatSparseRandom(A, 5));
 
   axbMat_t B;
   AXB_ERR_CHECK(axbMatCreateBegin(axb_handle, &B));
   AXB_ERR_CHECK(axbMatSetSizes(B, n, n));
   AXB_ERR_CHECK(axbMatSetMemBackend(B, mem));
   AXB_ERR_CHECK(axbMatSetOpBackend(B, ops));
-  AXB_ERR_CHECK(axbMatSetStorageType(B, AXB_STORAGE_COMPRESSED_CSR));
+  AXB_ERR_CHECK(axbMatSetStorageType(B, AXB_STORAGE_CSR));
   AXB_ERR_CHECK(axbMatCreateEnd(B));
+  AXB_ERR_CHECK(initMatSparseRandom(B, 5));
 
   // Run test
   test(A, B, x0, x1);
@@ -64,6 +133,8 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
 
   AXB_ERR_CHECK(axbVecDestroy(x0));
   AXB_ERR_CHECK(axbVecDestroy(x1));
+
+  free(temp);
 
   return 0;
 }

@@ -88,10 +88,14 @@ axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(voi
 
 axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
+  if (!src) return 2;
+  if (!dest) return 3;
   return mem->op_copyin(src, src_type, dest, dest_type, n, mem->impl);
 }
 axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
+  if (!src) return 2;
+  if (!dest) return 3;
   return mem->op_copyout(src, src_type, dest, dest_type, n, mem->impl);
 }
 

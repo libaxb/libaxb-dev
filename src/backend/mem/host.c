@@ -20,13 +20,20 @@ static axbStatus_t host_free(void *ptr_to_free, void *aux_data)
 
 static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
-  if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
+  if ( src_type != AXB_INT_32 &&  src_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
+  if (dest_type != AXB_INT_32 && dest_type != AXB_REAL_DOUBLE) return 16591; // not yet supported
+  if ( src_type != dest_type) return 16592; // not yet supported
 
-  double *d_src  = src;
-  double *d_dest = dest;
-  for (size_t i=0; i<n; ++i)
-  {
-    d_dest[i] = d_src[i];
+  if (src_type == AXB_INT_32) {
+    int *d_src  = src;
+    int *d_dest = dest;
+    for (size_t i=0; i<n; ++i)
+      d_dest[i] = d_src[i];
+  } else if (src_type == AXB_REAL_DOUBLE) {
+    double *d_src  = src;
+    double *d_dest = dest;
+    for (size_t i=0; i<n; ++i)
+      d_dest[i] = d_src[i];
   }
 
   (void)aux_data;
@@ -35,13 +42,20 @@ static axbStatus_t host_copyin(void *src, axbDataType_t src_type, void *dest, ax
 
 static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n, void *aux_data)
 {
-  if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
+  if ( src_type != AXB_INT_32 &&  src_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
+  if (dest_type != AXB_INT_32 && dest_type != AXB_REAL_DOUBLE) return 16591; // not yet supported
+  if ( src_type != dest_type) return 16592; // not yet supported
 
-  double *d_src  = src;
-  double *d_dest = dest;
-  for (size_t i=0; i<n; ++i)
-  {
-    d_dest[i] = d_src[i];
+  if (src_type == AXB_INT_32) {
+    int *d_src  = src;
+    int *d_dest = dest;
+    for (size_t i=0; i<n; ++i)
+      d_dest[i] = d_src[i];
+  } else if (src_type == AXB_REAL_DOUBLE) {
+    double *d_src  = src;
+    double *d_dest = dest;
+    for (size_t i=0; i<n; ++i)
+      d_dest[i] = d_src[i];
   }
 
   (void)aux_data;

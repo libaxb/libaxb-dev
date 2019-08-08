@@ -67,18 +67,21 @@ struct axbMat_s
 
   size_t rows;
   size_t cols;
+  size_t nonzeros;
 
   size_t name_capacity;
   char *name;
 
-  axbDataType_t row_markers_datatype;
   void *row_markers;
+  axbDataType_t row_markers_datatype;
 
-  axbDataType_t col_indices_datatype;
   void *col_indices;
+  axbDataType_t col_indices_datatype;
 
-  axbDataType_t values_datatype;
   void *values;
+  axbDataType_t values_datatype;
+
+  axbMatStorage_t storage_type;
 
   axbMemBackend_t memBackend;
   axbOpBackend_t  opBackend;

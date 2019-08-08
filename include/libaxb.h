@@ -286,7 +286,7 @@ axbStatus_t axbMatCreateBegin(axbHandle_t handle, axbMat_t *mat);
 axbStatus_t axbMatSetSizes(axbMat_t mat, size_t num_rows, size_t num_cols);
 
 /** @brief Returns the number of rows and columns of the matrix */
-axbStatus_t axbMatGetSizes(axbMat_t mat, const size_t *num_rows, const size_t *num_cols);
+axbStatus_t axbMatGetSizes(axbMat_t mat, size_t *num_rows, size_t *num_cols);
 
 /** @brief Specifies the index types to be used when the matrix is stored in a CSR format (i.e. AXB_STORAGE_CSR or AXB_STORAGE_COMPRESSED_CSR).
  *
@@ -303,7 +303,7 @@ axbStatus_t axbMatGetSizes(axbMat_t mat, const size_t *num_rows, const size_t *n
 axbStatus_t axbMatSetCSRIndexTypes(axbMat_t mat, axbDataType_t row_type, axbDataType_t col_type);
 
 /** @brief Returns the index data types used for the row-markers (row_type) and the column indices (col_type) for the CSR format. */
-axbStatus_t axbMatGetCSRIndexTypes(axbMat_t mat, const axbDataType_t *row_type, const axbDataType_t *col_type);
+axbStatus_t axbMatGetCSRIndexTypes(axbMat_t mat, axbDataType_t *row_type, axbDataType_t *col_type);
 
 /** @brief Sets the data type used for numerical entries in 'mat'. Default: AXB_REAL_DOUBLE
 *
@@ -312,7 +312,7 @@ axbStatus_t axbMatGetCSRIndexTypes(axbMat_t mat, const axbDataType_t *row_type, 
 axbStatus_t axbMatSetDataType(axbMat_t mat, axbDataType_t datatype);
 
 /** @brief Returns the data type used for the numerical entries in 'mat' */
-axbStatus_t axbMatGetDataType(axbMat_t mat, const axbDataType_t *datatype);
+axbStatus_t axbMatGetDataType(axbMat_t mat, axbDataType_t *datatype);
 
 /** @brief Sets the memory backend to be used with the matrix.
  *
@@ -320,13 +320,13 @@ axbStatus_t axbMatGetDataType(axbMat_t mat, const axbDataType_t *datatype);
  */
 axbStatus_t axbMatSetMemBackend(axbMat_t mat, axbMemBackend_t backend);
 /** @brief Returns the memory backend currently used by the matrix */
-axbStatus_t axbMatGetMemBackend(axbMat_t mat, const axbMemBackend_t *backend);
+axbStatus_t axbMatGetMemBackend(axbMat_t mat, axbMemBackend_t *backend);
 
 /** @brief Sets the operation backend used for running operations on the matrix */
 axbStatus_t axbMatSetOpBackend(axbMat_t mat, axbOpBackend_t backend);
 
 /** @brief Returns the operation backend currently in use for the matrix */
-axbStatus_t axbMatGetOpBackend(axbMat_t mat, const axbOpBackend_t *backend);
+axbStatus_t axbMatGetOpBackend(axbMat_t mat, axbOpBackend_t *backend);
 
 typedef enum {
  AXB_STORAGE_CSR = 0,           /// standard CSR format
@@ -347,8 +347,8 @@ axbStatus_t axbMatCreateEnd(axbMat_t mat);
 
 /** @brief Sets the name for the matrix */
 axbStatus_t axbMatSetName(axbMat_t mat, const char *name);
-/** @brief Returns the name of the matrix in the array 'name' (up to max_name_size characters including terminating zero-byte) */
-axbStatus_t axbMatGetName(axbMat_t mat, const char *name, size_t max_name_size);
+/** @brief Returns the pointer to the name of the matrix */
+axbStatus_t axbMatGetName(axbMat_t mat, const char **name);
 
 /** @brief Populates the matrix with the provided values (row-major).
  *

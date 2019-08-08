@@ -19,9 +19,10 @@ axbStatus_t axbVecCreateBegin(axbHandle_t handle, axbVec_t *vec)
   (*vec)->name = malloc(10);
   (*vec)->name[0] = 0;
   (*vec)->name_capacity = 10;
-  (*vec)->data = NULL;
 
+  (*vec)->data = NULL;
   (*vec)->datatype = AXB_REAL_DOUBLE;
+
   (*vec)->memBackend = handle->memBackends[0];
   (*vec)->opBackend  = handle->opBackends[0];
 
