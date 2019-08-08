@@ -69,4 +69,33 @@ axbStatus_t initVecRandom(axbVec_t x, double *y)
   return 0;
 }
 
+
+axbStatus_t initMatSparseRandom(axbMat_t A, size_t nonzeros_per_row)
+{
+  size_t rows, cols;
+  AXB_ERR_CHECK(axbMatGetSizes(A, &rows, &cols));
+  size_t nonzeros = rows * nonzeros_per_row;
+
+  int    *host_rows = malloc(sizeof(int)   *(rows+1));
+  int    *host_cols = malloc(sizeof(int)   *(nonzeros));
+  double *host_vals = malloc(sizeof(double)*(nonzeros));
+
+  // populate
+  host_rows[0] = 0;
+  int nnz_index = 0;
+  size_t col_inc = rows / nonzeros_per_row / 2;
+  for (size_t i=0; i<rows; ++i) {
+    for (size_t j=0; j<nonzeros_per_row; ++j) {
+      host_cols[nnz_index] = i/2 + col_inc * j + rand() % col_inc;
+      host_vals[nnz_index] = 1.0 + (rand() % 1023 - 500.0) / 300.0;
+      ++nnz_index;
+    }
+    host_rows[i+1] = nnz_index;
+  }
+
+  // copy over to matrix:
+  AXB_ERR_CHECK(axbMatSetValuesCSR(A, host_rows, AXB_INT_32, host_cols, AXB_INT_32, host_vals, AXB_REAL_DOUBLE, nonzeros));
+  return 0;
+}
+
 #endif

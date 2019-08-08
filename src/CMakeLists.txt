@@ -10,6 +10,7 @@ if (ENABLE_CUDA)
                            backend/op/cuda.cu
                            backend/op/opencl.c
                            backend/backend.c
+                           mat.c
                            vec.c
                            scalar.c
                            general.c)
@@ -21,6 +22,7 @@ ELSE(ENABLE_CUDA)
                       backend/op/cuda.c
                       backend/op/opencl.c
                       backend/backend.c
+                      mat.c
                       vec.c
                       scalar.c
                       general.c)
