@@ -11,6 +11,7 @@
 
 axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
 {
+  (void)B;
   size_t rows, cols, nonzeros;
   AXB_ERR_CHECK(axbMatGetSizes(A, &rows, &cols));
   AXB_ERR_CHECK(axbMatGetNonzerosSize(A, &nonzeros));

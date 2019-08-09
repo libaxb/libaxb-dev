@@ -44,7 +44,7 @@ axbStatus_t check_equal(axbVec_t x, double *y, double *temp, const char *test_de
   for (size_t i=0; i<n; ++i) {
     double rel_diff = get_rel_diff(y[i], temp[i]);
     if (rel_diff > TEST_EPSILON) {
-      fprintf(stderr, "ERROR: Test %s failed with relative error %g at index %ld: reference %g vs. libaxb %g\n Aborting...\n", test_desc, i, rel_diff, y[i], temp[i]);
+      fprintf(stderr, "ERROR: Test %s failed with relative error %g at index %ld: reference %g vs. libaxb %g\n Aborting...\n", test_desc, rel_diff, i, y[i], temp[i]);
       exit(EXIT_FAILURE);
     }
   }

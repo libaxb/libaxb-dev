@@ -139,7 +139,7 @@ axbStatus_t axbMatGetName(axbMat_t mat, const char **name)
 axbStatus_t axbMatSetValuesDense(axbMat_t mat, void *values, axbDataType_t values_datatype)
 {
   if (mat->init != 119347) {
-    fprintf(stderr, "ERROR in %s: Matrix not yet initialized. Call to axbMatCreateEnd() required.\n", __FUNCTION__);
+    fprintf(stderr, "ERROR in %s: Matrix not yet initialized. Call to axbMatCreateEnd() required.\n", __func__);
     return mat->init;
   }
 
