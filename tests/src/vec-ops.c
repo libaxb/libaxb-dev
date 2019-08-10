@@ -168,7 +168,7 @@ axbStatus_t test(axbVec_t x0, axbVec_t x1, axbVec_t x2, axbVec_t x3, axbScalar_t
   axbVec_t vecs[3] = {x1, x2, x3};
   axbScalar_t scalars[3] = {alpha, beta, gamma};
   AXB_ERR_CHECK(axbVecMAXPY(x0, 3, scalars, vecs));
-  for (size_t i=0; i<n; ++i) y0[i] = a * y1[i] + b * y2[i] + c * y3[i];
+  for (size_t i=0; i<n; ++i) y0[i] += a * y1[i] + b * y2[i] + c * y3[i];
   check_equal(x0, y0, temp, "axbVecMAXPY");
 
   //AXB_OP_VEC_POINTWISEMULT
