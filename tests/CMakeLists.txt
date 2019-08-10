@@ -4,12 +4,12 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/tests/src)
 
 ADD_EXECUTABLE(test-vec-ops src/vec-ops.c)
-target_link_libraries(test-vec-ops   libaxb m)
+target_link_libraries(test-vec-ops   axb m)
 ADD_TEST(vec-ops-host test-vec-ops "host")
 
 
 ADD_EXECUTABLE(test-mat-sparse-ops src/mat-sparse-ops.c)
-target_link_libraries(test-mat-sparse-ops   libaxb m)
+target_link_libraries(test-mat-sparse-ops   axb m)
 ADD_TEST(mat-sparse-ops-host test-mat-sparse-ops "host")
 
 if (ENABLE_CUDA)
