@@ -107,12 +107,14 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 # Install
 #########
 
+install(FILES "${PROJECT_SOURCE_DIR}/include/libaxb.h"
+   DESTINATION "${INSTALL_INCLUDE_DIR}" COMPONENT dev)
+
 install(FILES
    "${PROJECT_BINARY_DIR}/FindOpenCL.cmake"
    "${PROJECT_BINARY_DIR}/libaxbConfig.cmake"
    "${PROJECT_BINARY_DIR}/libaxbConfigVersion.cmake"
    DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-
 
 # For out-of-the-box support on MacOS:
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

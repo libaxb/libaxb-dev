@@ -34,3 +34,7 @@ IF (ENABLE_OPENCL)
 ENDIF(ENABLE_OPENCL)
 
 target_link_libraries(axb m)
+
+install(TARGETS axb
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)

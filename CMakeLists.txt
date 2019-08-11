@@ -74,11 +74,4 @@ add_subdirectory(doc)
 
 add_subdirectory(src)
 
-# Install
-#########
-
-install(DIRECTORY libaxb "${CMAKE_CURRENT_BINARY_DIR}/libaxb"
-   DESTINATION "${INSTALL_INCLUDE_DIR}" COMPONENT dev
-   FILES_MATCHING PATTERN "*.h")
-
 
