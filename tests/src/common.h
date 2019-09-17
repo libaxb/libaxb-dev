@@ -20,7 +20,7 @@ double get_rel_diff(double a, double b) {
 }
 
 
-axbStatus_t check_equal_scalar(axbScalar_t alpha, double a, const char *test_desc)
+axbStatus_t check_equal_scalar(const struct axbScalar_s *alpha, double a, const char *test_desc)
 {
   double t;
   AXB_ERR_CHECK(axbScalarGetValue(alpha, &t, AXB_REAL_DOUBLE));
@@ -35,7 +35,7 @@ axbStatus_t check_equal_scalar(axbScalar_t alpha, double a, const char *test_des
   return 0;
 }
 
-axbStatus_t check_equal(axbVec_t x, double *y, double *temp, const char *test_desc)
+axbStatus_t check_equal(const struct axbVec_s *x, double *y, double *temp, const char *test_desc)
 {
   size_t n;
   AXB_ERR_CHECK(axbVecGetSize(x, &n));
@@ -52,7 +52,7 @@ axbStatus_t check_equal(axbVec_t x, double *y, double *temp, const char *test_de
   return 0;
 }
 
-axbStatus_t check_equal_csr(axbMat_t A, axbMat_t B, const char *test_desc)
+axbStatus_t check_equal_csr(const struct axbMat_s *A, const struct axbMat_s *B, const char *test_desc)
 {
   //
   // Check 1: Dimensions
@@ -121,7 +121,7 @@ axbStatus_t check_equal_csr(axbMat_t A, axbMat_t B, const char *test_desc)
 }
 
 
-axbStatus_t initVecRandom(axbVec_t x, double *y)
+axbStatus_t initVecRandom(struct axbVec_s *x, double *y)
 {
   size_t n;
   AXB_ERR_CHECK(axbVecGetSize(x, &n));
@@ -139,7 +139,7 @@ axbStatus_t initVecRandom(axbVec_t x, double *y)
 }
 
 
-axbStatus_t initMatSparseRandom(axbMat_t A, size_t nonzeros_per_row)
+axbStatus_t initMatSparseRandom(struct axbMat_s *A, size_t nonzeros_per_row)
 {
   size_t rows, cols;
   AXB_ERR_CHECK(axbMatGetSizes(A, &rows, &cols));
@@ -174,7 +174,7 @@ axbStatus_t initMatSparseRandom(axbMat_t A, size_t nonzeros_per_row)
 }
 
 
-axbStatus_t printMat(axbMat_t A)
+axbStatus_t printMat(const struct axbMat_s *A)
 {
   const char *name;
   axbMatGetName(A, &name);

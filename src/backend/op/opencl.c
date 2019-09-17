@@ -10,8 +10,6 @@
 #include "libaxb/backend/op.h"
 #include "libaxb/backend/opencl.h"
 
-typedef struct axbOpOpenCL_s *axbOpOpenCL_t;
-
 struct axbOpOpenCL_s
 {
   // from struct axbMemOpenCL_s:
@@ -85,10 +83,10 @@ static const char * my_compute_program =
 "\n";
 
 
-static axbStatus_t op_vec_set(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_set(struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   cl_int status;
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
 
   cl_mem cl_x     = x->data;
   cl_uint cl_size = (cl_uint)x->size;
@@ -117,10 +115,10 @@ static axbStatus_t op_vec_set(axbVec_t x, axbScalar_t alpha, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_sqrtabs(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_sqrtabs(struct axbVec_s *x, void *aux_data)
 {
   cl_int status;
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
 
   cl_mem cl_x     = x->data;
   cl_uint cl_size = (cl_uint)x->size;
@@ -139,10 +137,10 @@ static axbStatus_t op_vec_sqrtabs(axbVec_t x, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_zero(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_zero(struct axbVec_s *x, void *aux_data)
 {
   cl_int status;
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
 
   cl_mem cl_x     = x->data;
   cl_uint cl_size = (cl_uint)x->size;
@@ -163,10 +161,10 @@ static axbStatus_t op_vec_zero(axbVec_t x, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_scale(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_scale(struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   cl_int status;
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
 
   cl_mem cl_y     = x->data;
   cl_uint cl_size = (cl_uint)x->size;
@@ -197,10 +195,10 @@ static axbStatus_t op_vec_scale(axbVec_t x, axbScalar_t alpha, void *aux_data)
 
 ///////////////
 
-static axbStatus_t op_vec_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_axpy(struct axbVec_s *y, struct axbScalar_s *alpha, struct axbVec_s *x, void *aux_data)
 {
   cl_int status;
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)aux_data;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
 
   cl_mem cl_y     = y->data;
   cl_mem cl_alpha = alpha->data;
@@ -226,14 +224,14 @@ static axbStatus_t op_vec_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *
 
 
 
-static axbStatus_t axbOpBackendInit_OpenCL(axbHandle_t handle, axbOpBackend_t opencl_op_backend)
+static axbStatus_t axbOpBackendInit_OpenCL(struct axbHandle_s *handle, struct axbOpBackend_s *opencl_op_backend)
 {
-  axbMemBackend_t opencl_mem_backend;
+  struct axbMemBackend_s *opencl_mem_backend;
   axbStatus_t status = axbMemBackendGetByName(handle, &opencl_mem_backend, "OpenCL");AXB_ERRCHK(status);
 
   opencl_op_backend->impl = malloc(sizeof(struct axbOpOpenCL_s));
-  axbOpOpenCL_t op_opencl = (axbOpOpenCL_t)opencl_op_backend->impl;
-  axbMemOpenCL_t mem_opencl = (axbMemOpenCL_t)opencl_mem_backend->impl;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)opencl_op_backend->impl;
+  struct axbMemOpenCL_s *mem_opencl = (struct axbMemOpenCL_s*)opencl_mem_backend->impl;
 
   op_opencl->platform = mem_opencl->platform;
   op_opencl->context = mem_opencl->context;
@@ -279,7 +277,7 @@ static axbStatus_t axbOpBackendInit_OpenCL(axbHandle_t handle, axbOpBackend_t op
 
 static axbStatus_t destroyOpenCLContext(void *impl)
 {
-  axbOpOpenCL_t opencl_context = (axbOpOpenCL_t)impl;
+  struct axbOpOpenCL_s *opencl_context = (struct axbOpOpenCL_s*)impl;
   for (size_t i=0; i<opencl_context->kernels_size; ++i) {
     cl_int status = clReleaseKernel(opencl_context->kernels[i]); AXB_ERRCHK(status);
   }
@@ -292,9 +290,9 @@ static axbStatus_t destroyOpenCLContext(void *impl)
   return 0;
 }
 
-axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle)
+axbStatus_t axbOpBackendRegister_OpenCL(struct axbHandle_s *handle)
 {
-  axbOpBackend_t opencl_backend;
+  struct axbOpBackend_s *opencl_backend;
   axbStatus_t status = axbOpBackendCreate(&opencl_backend); AXB_ERRCHK(status);
 
   status = axbOpBackendInit_OpenCL(handle, opencl_backend); AXB_ERRCHK(status);
@@ -349,7 +347,7 @@ axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle)
 
 #include "libaxb/backend/opencl.h"
 
-axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle)
+axbStatus_t axbOpBackendRegister_OpenCL(struct axbHandle_s *handle)
 {
   (void)handle;
   return 0;

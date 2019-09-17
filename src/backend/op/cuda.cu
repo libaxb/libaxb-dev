@@ -24,17 +24,17 @@ static void kernel_vec_set_from_host(int n, double *x, double alpha)
 }
 
 
-static axbStatus_t op_vec_set(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_set(struct axbVec_s *x, const struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
   double *d_x     = (double*)x->data;
 
   if (strcmp(alpha->memBackend->name, "host") != 0) {  // alpha on GPU
-    double *d_alpha = (double*)alpha->data;
+    const double *d_alpha = (const double*)alpha->data;
     kernel_vec_set_from_device<<<256, 256>>>((int)x->size, d_x, d_alpha);
   } else { // alpha on CPU
-    double d_alpha = *((double*)alpha->data);
+    double d_alpha = *((const double*)alpha->data);
     kernel_vec_set_from_host<<<256, 256>>>((int)x->size, d_x, d_alpha);
   }
 
@@ -50,7 +50,7 @@ static void kernel_vec_sqrtabs(int n, double *x)
 }
 
 
-static axbStatus_t op_vec_sqrtabs(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_sqrtabs(struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
@@ -62,7 +62,7 @@ static axbStatus_t op_vec_sqrtabs(axbVec_t x, void *aux_data)
 
 /////////////////////
 
-static axbStatus_t op_vec_zero(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_zero(struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
@@ -87,7 +87,7 @@ static void kernel_vec_scale_from_host(int n, double *x, double alpha)
 }
 
 
-static axbStatus_t op_vec_scale(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_scale(struct axbVec_s *x, const struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
@@ -124,7 +124,7 @@ __device__ double atomicAdd(double* address, double val) {
 /////////////////////
 
 __global__
-static void kernel_vec_sum(int n, double *x, double *alpha)
+static void kernel_vec_sum(int n, const double *x, double *alpha)
 {
   __shared__ double reduction_buffer[256];
   double t = 0;
@@ -145,12 +145,13 @@ static void kernel_vec_sum(int n, double *x, double *alpha)
 }
 
 
-static axbStatus_t op_vec_sum(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_sum(const struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
+
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_alpha, 0);
   kernel_vec_sum<<<256, 256>>>((int)x->size, d_x, d_alpha);
 
@@ -160,7 +161,7 @@ static axbStatus_t op_vec_sum(axbVec_t x, axbScalar_t alpha, void *aux_data)
 /////////////////////
 
 __global__
-static void kernel_vec_dot(int n, double *x, double *y, double *alpha)
+static void kernel_vec_dot(int n, const double *x, const double *y, double *alpha)
 {
   __shared__ double reduction_buffer[256];
   double t = 0;
@@ -181,13 +182,14 @@ static void kernel_vec_dot(int n, double *x, double *y, double *alpha)
 }
 
 
-static axbStatus_t op_vec_dot(axbVec_t x, axbVec_t y, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_dot(const struct axbVec_s *x, const struct axbVec_s *y, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+  const double *d_y     = (const double*)y->data;
+        double *d_alpha =       (double*)alpha->data;
+
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_alpha, 0);
   kernel_vec_dot<<<256, 256>>>((int)x->size, d_x, d_y, d_alpha);
 
@@ -196,14 +198,14 @@ static axbStatus_t op_vec_dot(axbVec_t x, axbVec_t y, axbScalar_t alpha, void *a
 
 /////////////////////
 
-static axbStatus_t op_vec_tdot(axbVec_t x, axbVec_t y, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_tdot(const struct axbVec_s *x, const struct axbVec_s *y, struct axbScalar_s *alpha, void *aux_data)
 {
   return op_vec_dot(x, y, alpha, aux_data); // TODO: update for complex scalar types
 }
 
 /////////////////////
 
-static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, axbScalar_t *mdot, void *aux_data)
+static axbStatus_t op_vec_mdot(const struct axbVec_s *x, size_t num_vecs, const struct axbVec_s **y, struct axbScalar_s **mdot, void *aux_data)
 {
   (void)aux_data;
 
@@ -217,7 +219,7 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
 /////////////////////
 
 __global__
-static void kernel_vec_norm1(int n, double *x, double *alpha)
+static void kernel_vec_norm1(int n, const double *x, double *alpha)
 {
   __shared__ double reduction_buffer[256];
   double t = 0;
@@ -238,12 +240,12 @@ static void kernel_vec_norm1(int n, double *x, double *alpha)
 }
 
 
-static axbStatus_t op_vec_norm1(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_norm1(const struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_alpha, 0);
   kernel_vec_norm1<<<256, 256>>>((int)x->size, d_x, d_alpha);
 
@@ -253,7 +255,7 @@ static axbStatus_t op_vec_norm1(axbVec_t x, axbScalar_t alpha, void *aux_data)
 /////////////////////
 
 __global__
-static void kernel_vec_norm2(int n, double *x, double *alpha)
+static void kernel_vec_norm2(int n, const double *x, double *alpha)
 {
   __shared__ double reduction_buffer[256];
   double t = 0;
@@ -274,12 +276,13 @@ static void kernel_vec_norm2(int n, double *x, double *alpha)
 }
 
 
-static axbStatus_t op_vec_norm2(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_norm2(const struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
+
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_alpha, 0);
   kernel_vec_norm2<<<256, 256>>>((int)x->size, d_x, d_alpha);
   kernel_vec_sqrtabs<<<1, 1>>>((int)1, d_alpha);
@@ -289,7 +292,7 @@ static axbStatus_t op_vec_norm2(axbVec_t x, axbScalar_t alpha, void *aux_data)
 /////////////////////
 
 __global__
-static void kernel_vec_norminf(int n, double *x, double *alpha)
+static void kernel_vec_norminf(int n, const double *x, double *alpha)
 {
   __shared__ double reduction_buffer[256];
   double t = 0;
@@ -310,15 +313,16 @@ static void kernel_vec_norminf(int n, double *x, double *alpha)
 }
 
 
-static axbStatus_t op_vec_norminf(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_norminf(const struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
   double *tmp;
   cudaMalloc((void**)&tmp, sizeof(double) * 256);   // TODO: Avoid allocation in each call to op_vec_norminf
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
+
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_alpha, 0);
   kernel_vec_norminf<<<256, 256>>>((int)x->size, d_x, tmp);
   kernel_vec_norminf<<<1, 256>>>((int)256, tmp, d_alpha);
@@ -331,7 +335,7 @@ static axbStatus_t op_vec_norminf(axbVec_t x, axbScalar_t alpha, void *aux_data)
 /////////////////////
 
 __global__
-static void kernel_vec_dotnorm2(int n, double *s, double *t, double *dot_st, double *norm_t)
+static void kernel_vec_dotnorm2(int n, const double *s, const double *t, double *dot_st, double *norm_t)
 {
   __shared__ double reduction_buffer[256];
   double dot = 0;
@@ -380,14 +384,16 @@ static void kernel_vec_dotnorm2(int n, double *s, double *t, double *dot_st, dou
 }
 
 
-static axbStatus_t op_vec_dotnorm2(axbVec_t s, axbVec_t t, axbScalar_t dot, axbScalar_t norm, void *aux_data)
+static axbStatus_t op_vec_dotnorm2(const struct axbVec_s *s, const struct axbVec_s *t, struct axbScalar_s *dot, struct axbScalar_s *norm, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_s     = (double*)s->data;
-  double *d_t     = (double*)t->data;
+  const double *d_s = (const double*)s->data;
+  const double *d_t = (const double*)t->data;
+
   double *d_dot   = (double*)dot->data;
   double *d_norm  = (double*)norm->data;
+
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_dot, 0);
   kernel_vec_set_from_host<<<1, 1>>>((int)1, d_norm, 0);
   kernel_vec_dotnorm2<<<256, 256>>>((int)s->size, d_s, d_t, d_dot, d_norm);
@@ -399,7 +405,7 @@ static axbStatus_t op_vec_dotnorm2(axbVec_t s, axbVec_t t, axbScalar_t dot, axbS
 /////////////////////
 
 __global__
-static void kernel_vec_max(int n, double *x, int *index, double *alpha)
+static void kernel_vec_max(int n, const double *x, int *index, double *alpha)
 {
   __shared__ double reduction_buffer_max[256];
   __shared__ int    reduction_buffer_idx[256];
@@ -435,7 +441,7 @@ static void kernel_vec_max(int n, double *x, int *index, double *alpha)
 }
 
 
-static axbStatus_t op_vec_max(axbVec_t x, size_t *idx, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_max(const struct axbVec_s *x, size_t *idx, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
@@ -446,8 +452,8 @@ static axbStatus_t op_vec_max(axbVec_t x, size_t *idx, axbScalar_t alpha, void *
   double *tmp;   cudaMalloc((void**)&tmp,   sizeof(double) * 256);   // TODO: Avoid allocation in each call to op_vec_max
   int    *index; cudaMalloc((void**)&index, sizeof(int)    * 256);   // TODO: Avoid allocation in each call to op_vec_max
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
   kernel_vec_max<<<256, 256>>>((int)x->size, d_x, index, tmp);
 
   double host_val[256];
@@ -477,7 +483,7 @@ static axbStatus_t op_vec_max(axbVec_t x, size_t *idx, axbScalar_t alpha, void *
 /////////////////////
 
 __global__
-static void kernel_vec_min(int n, double *x, int *index, double *alpha)
+static void kernel_vec_min(int n, const double *x, int *index, double *alpha)
 {
   __shared__ double reduction_buffer_min[256];
   __shared__ int    reduction_buffer_idx[256];
@@ -513,7 +519,7 @@ static void kernel_vec_min(int n, double *x, int *index, double *alpha)
 }
 
 
-static axbStatus_t op_vec_min(axbVec_t x, size_t *idx, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_min(const struct axbVec_s *x, size_t *idx, struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
@@ -524,8 +530,8 @@ static axbStatus_t op_vec_min(axbVec_t x, size_t *idx, axbScalar_t alpha, void *
   double *tmp;   cudaMalloc((void**)&tmp,   sizeof(double) * 256);   // TODO: Avoid allocation in each call to op_vec_max
   int    *index; cudaMalloc((void**)&index, sizeof(int)    * 256);   // TODO: Avoid allocation in each call to op_vec_max
 
-  double *d_x     = (double*)x->data;
-  double *d_alpha = (double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+        double *d_alpha =       (double*)alpha->data;
   kernel_vec_min<<<256, 256>>>((int)x->size, d_x, index, tmp);
 
   double host_val[256];
@@ -558,18 +564,18 @@ static axbStatus_t op_vec_min(axbVec_t x, size_t *idx, axbScalar_t alpha, void *
 //
 
 __global__
-static void kernel_vec_copy(int n, double *x, double *y)
+static void kernel_vec_copy(int n, const double *x, double *y)
 {
   for (int i = blockIdx.x*blockDim.x + threadIdx.x; i<n; i += gridDim.x * blockDim.x) y[i] = x[i];
 }
 
 
-static axbStatus_t op_vec_copy(axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_copy(const struct axbVec_s *x, struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
+  const double *d_x = (const double*)x->data;
+        double *d_y =       (double*)y->data;
 
   kernel_vec_copy<<<256, 256>>>((int)x->size, d_x, d_y);
 
@@ -589,7 +595,7 @@ static void kernel_vec_swap(int n, double *x, double *y)
 }
 
 
-static axbStatus_t op_vec_swap(axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_swap(struct axbVec_s *x, struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
@@ -610,13 +616,13 @@ static void kernel_vec_axpy(int n, double *y, const double *alpha, const double 
 }
 
 
-static axbStatus_t op_vec_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_axpy(struct axbVec_s *y, const struct axbScalar_s *alpha, const struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_y     = (double*)y->data;
-  double *d_alpha = (double*)alpha->data;
-  double *d_x     = (double*)x->data;
+        double *d_y     =       (double*)y->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
 
   kernel_vec_axpy<<<256, 256>>>((int)y->size, d_y, d_alpha, d_x);
 
@@ -632,13 +638,13 @@ static void kernel_vec_aypx(int n, double *y, const double *alpha, const double 
 }
 
 
-static axbStatus_t op_vec_aypx(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_aypx(struct axbVec_s *y, const struct axbScalar_s *alpha, const struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_y     = (double*)y->data;
-  double *d_alpha = (double*)alpha->data;
-  double *d_x     = (double*)x->data;
+        double *d_y     =       (double*)y->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
 
   kernel_vec_aypx<<<256, 256>>>((int)y->size, d_y, d_alpha, d_x);
 
@@ -654,16 +660,16 @@ static void kernel_vec_axpbypcz(int n, double *z, const double *alpha, const dou
 }
 
 
-static axbStatus_t op_vec_axpbypcz(axbVec_t z, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_axpbypcz(struct axbVec_s *z, const struct axbScalar_s *alpha, const struct axbScalar_s *beta, const struct axbScalar_s *gamma, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_z     = (double*)z->data;
-  double *d_alpha = (double*)alpha->data;
-  double *d_beta  = (double*)beta->data;
-  double *d_gamma = (double*)gamma->data;
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
+        double *d_z     =       (double*)z->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_beta  = (const double*)beta->data;
+  const double *d_gamma = (const double*)gamma->data;
+  const double *d_x     = (const double*)x->data;
+  const double *d_y     = (const double*)y->data;
 
   kernel_vec_axpbypcz<<<256, 256>>>((int)z->size, d_z, d_alpha, d_beta, d_gamma, d_x, d_y);
 
@@ -679,14 +685,14 @@ static void kernel_vec_waxpy(int n, double *w, const double *alpha, const double
 }
 
 
-static axbStatus_t op_vec_waxpy(axbVec_t w, axbScalar_t alpha, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_waxpy(struct axbVec_s *w, const struct axbScalar_s *alpha, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = (double*)w->data;
-  double *d_alpha = (double*)alpha->data;
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
+        double *d_w     =       (double*)w->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+  const double *d_y     = (const double*)y->data;
 
   kernel_vec_waxpy<<<256, 256>>>((int)w->size, d_w, d_alpha, d_x, d_y);
 
@@ -695,7 +701,7 @@ static axbStatus_t op_vec_waxpy(axbVec_t w, axbScalar_t alpha, axbVec_t x, axbVe
 
 /////////////////////
 
-static axbStatus_t op_vec_maxpy(axbVec_t y, size_t num_vecs, const axbScalar_t *alpha, const axbVec_t *x, void *aux_data) {
+static axbStatus_t op_vec_maxpy(struct axbVec_s *y, size_t num_vecs, const struct axbScalar_s **alpha, const struct axbVec_s **x, void *aux_data) {
 
   // TODO: Be more efficient than this!
   for (size_t i=0; i<num_vecs; ++i)
@@ -712,13 +718,13 @@ static void kernel_vec_pointwisemult(int n, double *w, const double *x, const do
 }
 
 
-static axbStatus_t op_vec_pointwisemult(axbVec_t w, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_pointwisemult(struct axbVec_s *w, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = (double*)w->data;
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
+        double *d_w = (double*)w->data;
+  const double *d_x = (const double*)x->data;
+  const double *d_y = (const double*)y->data;
 
   kernel_vec_pointwisemult<<<256, 256>>>((int)w->size, d_w, d_x, d_y);
 
@@ -734,13 +740,13 @@ static void kernel_vec_pointwisediv(int n, double *w, const double *x, const dou
 }
 
 
-static axbStatus_t op_vec_pointwisediv(axbVec_t w, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_pointwisediv(struct axbVec_s *w, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = (double*)w->data;
-  double *d_x     = (double*)x->data;
-  double *d_y     = (double*)y->data;
+        double *d_w =       (double*)w->data;
+  const double *d_x = (const double*)x->data;
+  const double *d_y = (const double*)y->data;
 
   kernel_vec_pointwisediv<<<256, 256>>>((int)w->size, d_w, d_x, d_y);
 
@@ -751,9 +757,9 @@ static axbStatus_t op_vec_pointwisediv(axbVec_t w, axbVec_t x, axbVec_t y, void 
 
 
 
-extern "C" axbStatus_t axbOpBackendRegister_CUDA(axbHandle_t handle)
+extern "C" axbStatus_t axbOpBackendRegister_CUDA(struct axbHandle_s *handle)
 {
-  axbOpBackend_t cuda_backend;
+  struct axbOpBackend_s *cuda_backend;
   axbStatus_t status = axbOpBackendCreate(&cuda_backend); AXB_ERRCHK(status);
 
   // populate host_backend:

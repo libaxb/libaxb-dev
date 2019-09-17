@@ -15,20 +15,20 @@ struct axbHandle_s
 {
   int init;
 
-  size_t            memBackends_size;
-  size_t            memBackends_capacity;
-  axbMemBackend_t  *memBackends;
+  size_t                 memBackends_size;
+  size_t                 memBackends_capacity;
+  struct axbMemBackend_s **memBackends;
 
-  size_t            opBackends_size;
-  size_t            opBackends_capacity;
-  axbOpBackend_t   *opBackends;
+  size_t                opBackends_size;
+  size_t                opBackends_capacity;
+  struct axbOpBackend_s **opBackends;
 };
 
 
 
 struct axbScalar_s
 {
-  axbHandle_t handle;
+  struct axbHandle_s *handle;
   int init;
 
   size_t name_capacity;
@@ -37,14 +37,14 @@ struct axbScalar_s
   axbDataType_t datatype;
   void *data;
 
-  axbMemBackend_t memBackend;
-  axbOpBackend_t  opBackend;
+  struct axbMemBackend_s *memBackend;
+  struct axbOpBackend_s  *opBackend;
 };
 
 
 struct axbVec_s
 {
-  axbHandle_t handle;
+  struct axbHandle_s *handle;
   int init;
 
   size_t size;
@@ -55,14 +55,14 @@ struct axbVec_s
   axbDataType_t datatype;
   void *data;
 
-  axbMemBackend_t memBackend;
-  axbOpBackend_t  opBackend;
+  struct axbMemBackend_s *memBackend;
+  struct axbOpBackend_s  *opBackend;
 };
 
 
 struct axbMat_s
 {
-  axbHandle_t handle;
+  struct axbHandle_s *handle;
   int init;
 
   size_t rows;
@@ -83,8 +83,8 @@ struct axbMat_s
 
   axbMatStorage_t storage_type;
 
-  axbMemBackend_t memBackend;
-  axbOpBackend_t  opBackend;
+  struct axbMemBackend_s *memBackend;
+  struct axbOpBackend_s  *opBackend;
 };
 
 #endif

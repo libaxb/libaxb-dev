@@ -8,7 +8,7 @@
 #include "libaxb/backend/opencl.h"
 #include "libaxb/backend.h"
 
-axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
+axbStatus_t axbMemBackendCreate(struct axbMemBackend_s **mem)
 {
   *mem = malloc(sizeof(struct axbMemBackend_s));
 
@@ -24,7 +24,7 @@ axbStatus_t axbMemBackendCreate(axbMemBackend_t *mem)
   return 0;
 }
 
-axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle)
+axbStatus_t axbMemBackendRegisterDefaults(struct axbHandle_s *handle)
 {
   axbMemBackendRegister_Host(handle);
   axbMemBackendRegister_CUDA(handle);
@@ -33,7 +33,7 @@ axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle)
 }
 
 
-axbStatus_t axbMemBackendSetName(axbMemBackend_t ops, const char *name)
+axbStatus_t axbMemBackendSetName(struct axbMemBackend_s *ops, const char *name)
 {
   size_t len = strlen(name);
   if (len > ops->name_capacity) {
@@ -46,66 +46,66 @@ axbStatus_t axbMemBackendSetName(axbMemBackend_t ops, const char *name)
   return 0;
 }
 
-axbStatus_t axbMemBackendGetName(axbMemBackend_t ops, const char **name)
+axbStatus_t axbMemBackendGetName(struct axbMemBackend_s *ops, const char **name)
 {
   *name = ops->name;
   return 0;
 }
 
-axbStatus_t axbMemBackendSetMalloc(axbMemBackend_t mem, axbStatus_t (*func)(void **, size_t, void *))
+axbStatus_t axbMemBackendSetMalloc(struct axbMemBackend_s *mem, axbStatus_t (*func)(void **, size_t, void *))
 {
   mem->op_malloc = func;
   return 0;
 }
-axbStatus_t axbMemBackendSetFree(axbMemBackend_t mem, axbStatus_t (*func)(void *, void *))
+axbStatus_t axbMemBackendSetFree(struct axbMemBackend_s *mem, axbStatus_t (*func)(void *, void *))
 {
   mem->op_free = func;
   return 0;
 }
 
 
-axbStatus_t axbMemBackendMalloc(axbMemBackend_t mem, size_t num_bytes, void **ptr)
+axbStatus_t axbMemBackendMalloc(struct axbMemBackend_s *mem, size_t num_bytes, void **ptr)
 {
   return mem->op_malloc(ptr, num_bytes, mem->impl);
 }
 
-axbStatus_t axbMemBackendFree(axbMemBackend_t mem, void *ptr)
+axbStatus_t axbMemBackendFree(struct axbMemBackend_s *mem, void *ptr)
 {
   return mem->op_free(ptr, mem->impl);
 }
 
 
-axbStatus_t axbMemBackendSetCopyIn(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
+axbStatus_t axbMemBackendSetCopyIn(struct axbMemBackend_s *mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
 {
   mem->op_copyin = func;
   return 0;
 }
-axbStatus_t axbMemBackendSetCopyOut(axbMemBackend_t mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
+axbStatus_t axbMemBackendSetCopyOut(struct axbMemBackend_s *mem, axbStatus_t (*func)(void *, axbDataType_t, void *, axbDataType_t, size_t, void *))
 {
   mem->op_copyout = func;
   return 0;
 }
 
-axbStatus_t axbMemBackendCopyIn(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+axbStatus_t axbMemBackendCopyIn(struct axbMemBackend_s *mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
   if (!src) return 2;
   if (!dest) return 3;
   return mem->op_copyin(src, src_type, dest, dest_type, n, mem->impl);
 }
-axbStatus_t axbMemBackendCopyOut(axbMemBackend_t mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
+axbStatus_t axbMemBackendCopyOut(struct axbMemBackend_s *mem, void *src, axbDataType_t src_type, void *dest, axbDataType_t dest_type, size_t n)
 {
   if (!src) return 2;
   if (!dest) return 3;
   return mem->op_copyout(src, src_type, dest, dest_type, n, mem->impl);
 }
 
-axbStatus_t axbMemBackendSetDestroy(axbMemBackend_t mem, axbStatus_t (*func)(void*))
+axbStatus_t axbMemBackendSetDestroy(struct axbMemBackend_s *mem, axbStatus_t (*func)(void*))
 {
   mem->destroy = func;
   return 0;
 }
 
-axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem)
+axbStatus_t axbMemBackendDestroy(struct axbMemBackend_s *mem)
 {
   if (mem->destroy) {
     axbStatus_t status = mem->destroy(mem->impl); AXB_ERRCHK(status);
@@ -119,7 +119,7 @@ axbStatus_t axbMemBackendDestroy(axbMemBackend_t mem)
 ////////////////
 
 
-axbStatus_t axbOpBackendCreate(axbOpBackend_t *ops)
+axbStatus_t axbOpBackendCreate(struct axbOpBackend_s **ops)
 {
   *ops = malloc(sizeof(struct axbOpBackend_s));
 
@@ -135,7 +135,7 @@ axbStatus_t axbOpBackendCreate(axbOpBackend_t *ops)
   return 0;
 }
 
-axbStatus_t axbOpBackendSetName(axbOpBackend_t ops, const char *name)
+axbStatus_t axbOpBackendSetName(struct axbOpBackend_s *ops, const char *name)
 {
   size_t len = strlen(name);
   if (!ops->name)
@@ -150,19 +150,19 @@ axbStatus_t axbOpBackendSetName(axbOpBackend_t ops, const char *name)
   return 0;
 }
 
-axbStatus_t axbOpBackendGetName(axbOpBackend_t ops, const char **name)
+axbStatus_t axbOpBackendGetName(struct axbOpBackend_s *ops, const char **name)
 {
   *name = ops->name;
   return 0;
 }
 
-axbStatus_t axbOpBackendSetDestroy(axbOpBackend_t ops, axbStatus_t (*func)(void*))
+axbStatus_t axbOpBackendSetDestroy(struct axbOpBackend_s *ops, axbStatus_t (*func)(void*))
 {
   ops->destroy = func;
   return 0;
 }
 
-axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops)
+axbStatus_t axbOpBackendDestroy(struct axbOpBackend_s *ops)
 {
   if (ops->destroy) {
     axbStatus_t status = ops->destroy(ops->impl); AXB_ERRCHK(status);
@@ -174,7 +174,7 @@ axbStatus_t axbOpBackendDestroy(axbOpBackend_t ops)
 }
 
 
-axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, axbStatus_t (*op_func)(void), void *op_data, axbOperationID_t *op_id)
+axbStatus_t axbOpBackendAddOperation(struct axbOpBackend_s *ops, const char *op_name, axbStatus_t (*op_func)(void), void *op_data, axbOperationID_t *op_id)
 {
   if (ops->op_table_size == ops->op_table_capacity) {  // Expand op-table if already fully filled up
     axbOpDescriptor_t *old_op_table = ops->op_table;
@@ -195,7 +195,7 @@ axbStatus_t axbOpBackendAddOperation(axbOpBackend_t ops, const char *op_name, ax
 }
 
 
-axbStatus_t axbOpBackendRegisterDefaults(axbHandle_t handle)
+axbStatus_t axbOpBackendRegisterDefaults(struct axbHandle_s *handle)
 {
   axbStatus_t status;
   status = axbOpBackendRegister_Host(handle); AXB_ERRCHK(status);

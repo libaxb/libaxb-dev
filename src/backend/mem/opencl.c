@@ -13,7 +13,7 @@
 
 static axbStatus_t opencl_malloc(void **ptr, size_t size_in_bytes, void *aux_data)
 {
-  axbMemOpenCL_t opencl_context = aux_data;
+  struct axbMemOpenCL_s *opencl_context = aux_data;
 
   cl_int status;
   cl_mem mem = clCreateBuffer(opencl_context->context, CL_MEM_READ_WRITE, size_in_bytes, NULL, &status); AXB_ERRCHK(status);
@@ -33,7 +33,7 @@ static axbStatus_t opencl_copyin(void *src, axbDataType_t src_type, void *dest, 
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
 
-  axbMemOpenCL_t opencl_context = aux_data;
+  struct axbMemOpenCL_s *opencl_context = aux_data;
   cl_mem cl_dest = dest;
   cl_int status = clEnqueueWriteBuffer(opencl_context->queue, cl_dest, CL_TRUE, 0, sizeof(double) * n, src, 0, NULL, NULL); AXB_ERRCHK(status);
 
@@ -44,7 +44,7 @@ static axbStatus_t opencl_copyout(void *src, axbDataType_t src_type, void *dest,
 {
   if (src_type != AXB_REAL_DOUBLE || dest_type != AXB_REAL_DOUBLE) return 16590; // not yet supported
 
-  axbMemOpenCL_t opencl_context = aux_data;
+  struct axbMemOpenCL_s *opencl_context = aux_data;
   cl_mem cl_src = src;
   cl_int status = clEnqueueReadBuffer(opencl_context->queue, cl_src, CL_TRUE, 0, sizeof(double) * n, dest, 0, NULL, NULL); AXB_ERRCHK(status);
 
@@ -54,7 +54,7 @@ static axbStatus_t opencl_copyout(void *src, axbDataType_t src_type, void *dest,
 
 static axbStatus_t destroyOpenCLContext(void *impl)
 {
-  axbMemOpenCL_t opencl_context = (axbMemOpenCL_t)impl;
+  struct axbMemOpenCL_s *opencl_context = (struct axbMemOpenCL_s *)impl;
   cl_int status = clReleaseCommandQueue(opencl_context->queue);  AXB_ERRCHK(status);
   status = clReleaseContext(opencl_context->context);  AXB_ERRCHK(status);
   free(opencl_context->devices);
@@ -63,9 +63,9 @@ static axbStatus_t destroyOpenCLContext(void *impl)
 }
 
 
-axbStatus_t axbMemBackendCreate_OpenCL(axbMemBackend_t opencl_mem_backend)
+axbStatus_t axbMemBackendCreate_OpenCL(struct axbMemBackend_s *opencl_mem_backend)
 {
-  axbMemOpenCL_t opencl_context = malloc(sizeof(struct axbMemOpenCL_s));
+  struct axbMemOpenCL_s *opencl_context = malloc(sizeof(struct axbMemOpenCL_s));
 
   // set function pointers:
   opencl_mem_backend->impl = opencl_context;
@@ -101,9 +101,9 @@ axbStatus_t axbMemBackendCreate_OpenCL(axbMemBackend_t opencl_mem_backend)
 }
 
 
-axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle)
+axbStatus_t axbMemBackendRegister_OpenCL(struct axbHandle_s *handle)
 {
-  axbMemBackend_t opencl_backend;
+  struct axbMemBackend_s *opencl_backend;
   axbStatus_t status = axbMemBackendCreate(&opencl_backend); AXB_ERRCHK(status);
 
   // spawn OpenCL context:
@@ -128,7 +128,7 @@ axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle)
 
 #include "libaxb.h"
 
-axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle)
+axbStatus_t axbMemBackendRegister_OpenCL(struct axbHandle_s *handle)
 {
   (void)handle;
   return 0;

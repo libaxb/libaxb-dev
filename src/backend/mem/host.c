@@ -65,9 +65,9 @@ static axbStatus_t host_copyout(void *src, axbDataType_t src_type, void *dest, a
 
 
 
-axbStatus_t axbMemBackendRegister_Host(axbHandle_t handle)
+axbStatus_t axbMemBackendRegister_Host(struct axbHandle_s *handle)
 {
-  axbMemBackend_t host_backend;
+  struct axbMemBackend_s *host_backend;
   axbMemBackendCreate(&host_backend);
 
   // populate host_backend:

@@ -6,7 +6,7 @@
 #include "libaxb/backend/op.h"
 
 
-axbStatus_t axbMatCreateBegin(axbHandle_t handle, axbMat_t *mat)
+axbStatus_t axbMatCreateBegin(struct axbHandle_s *handle, struct axbMat_s **mat)
 {
   *mat = malloc(sizeof(struct axbMat_s));
   (*mat)->handle = handle;
@@ -38,79 +38,79 @@ axbStatus_t axbMatCreateBegin(axbHandle_t handle, axbMat_t *mat)
   return 0;
 }
 
-axbStatus_t axbMatSetSizes(axbMat_t mat, size_t num_rows, size_t num_cols)
+axbStatus_t axbMatSetSizes(struct axbMat_s *mat, size_t num_rows, size_t num_cols)
 {
   mat->rows = num_rows;
   mat->cols = num_cols;
   return 0;
 }
-axbStatus_t axbMatGetSizes(axbMat_t mat, size_t *num_rows, size_t *num_cols)
+axbStatus_t axbMatGetSizes(const struct axbMat_s *mat, size_t *num_rows, size_t *num_cols)
 {
   *num_rows = mat->rows;
   *num_cols = mat->cols;
   return 0;
 }
 
-axbStatus_t axbMatSetCSRIndexTypes(axbMat_t mat, axbDataType_t row_type, axbDataType_t col_type)
+axbStatus_t axbMatSetCSRIndexTypes(struct axbMat_s *mat, axbDataType_t row_type, axbDataType_t col_type)
 {
   mat->row_markers_datatype = row_type;
   mat->col_indices_datatype = col_type;
   return 0;
 }
-axbStatus_t axbMatGetCSRIndexTypes(axbMat_t mat, axbDataType_t *row_type, axbDataType_t *col_type)
+axbStatus_t axbMatGetCSRIndexTypes(const struct axbMat_s *mat, axbDataType_t *row_type, axbDataType_t *col_type)
 {
   *row_type = mat->row_markers_datatype;
   *col_type = mat->col_indices_datatype;
   return 0;
 }
 
-axbStatus_t axbMatSetDataType(axbMat_t mat, axbDataType_t datatype)
+axbStatus_t axbMatSetDataType(struct axbMat_s *mat, axbDataType_t datatype)
 {
   mat->values_datatype = datatype;
   return 0;
 }
-axbStatus_t axbMatGetDataType(axbMat_t mat, axbDataType_t *datatype)
+axbStatus_t axbMatGetDataType(const struct axbMat_s *mat, axbDataType_t *datatype)
 {
   *datatype = mat->values_datatype;
   return 0;
 }
 
-axbStatus_t axbMatSetMemBackend(axbMat_t mat, axbMemBackend_t backend)
+axbStatus_t axbMatSetMemBackend(struct axbMat_s *mat, struct axbMemBackend_s *backend)
 {
   mat->memBackend = backend;
   return 0;
 }
-axbStatus_t axbMatGetMemBackend(axbMat_t mat, axbMemBackend_t *backend)
+axbStatus_t axbMatGetMemBackend(const struct axbMat_s *mat, struct axbMemBackend_s **backend)
 {
   *backend = mat->memBackend;
   return 0;
 }
 
-axbStatus_t axbMatSetOpBackend(axbMat_t mat, axbOpBackend_t backend)
+axbStatus_t axbMatSetOpBackend(struct axbMat_s *mat, struct axbOpBackend_s *backend)
 {
   mat->opBackend = backend;
   return 0;
 }
-axbStatus_t axbMatGetOpBackend(axbMat_t mat, axbOpBackend_t *backend)
+axbStatus_t axbMatGetOpBackend(const struct axbMat_s *mat, struct axbOpBackend_s **backend)
 {
   *backend = mat->opBackend;
   return 0;
 }
 
 
-axbStatus_t axbMatSetStorageType(axbMat_t mat, axbMatStorage_t storage)
+axbStatus_t axbMatSetStorageType(struct axbMat_s *mat, axbMatStorage_t storage)
 {
   mat->storage_type = storage;
   return 0;
 }
 
-axbStatus_t axbMatGetStorageType(axbMat_t mat, axbMatStorage_t *storage)
+axbStatus_t axbMatGetStorageType(const struct axbMat_s *mat, axbMatStorage_t *storage)
 {
   *storage = mat->storage_type;
   return 0;
 }
 
-axbStatus_t axbMatCreateEnd(axbMat_t mat)
+axbStatus_t axbMatCreateEnd(struct axbMat_s *mat)
 {
   mat->init = 119347;  // TODO: better abstraction for these magic numbers
 
@@ -120,7 +120,7 @@ axbStatus_t axbMatCreateEnd(axbMat_t mat)
   return 0;
 }
 
-axbStatus_t axbMatSetName(axbMat_t mat, const char *name)
+axbStatus_t axbMatSetName(struct axbMat_s *mat, const char *name)
 {
   size_t len = strlen(name);
   if (len > mat->name_capacity) {
@@ -130,13 +130,13 @@ axbStatus_t axbMatSetName(axbMat_t mat, const char *name)
   for (size_t i=0; i<=len; ++i) mat->name[i] = name[i];
   return 0;
 }
-axbStatus_t axbMatGetName(axbMat_t mat, const char **name)
+axbStatus_t axbMatGetName(const struct axbMat_s *mat, const char **name)
 {
   *name = mat->name;
   return 0;
 }
 
-axbStatus_t axbMatSetValuesDense(axbMat_t mat, void *values, axbDataType_t values_datatype)
+axbStatus_t axbMatSetValuesDense(struct axbMat_s *mat, void *values, axbDataType_t values_datatype)
 {
   if (mat->init != 119347) {
     fprintf(stderr, "ERROR in %s: Matrix not yet initialized. Call to axbMatCreateEnd() required.\n", __func__);
@@ -185,18 +185,17 @@ axbStatus_t axbMatSetValuesDense(axbMat_t mat, void *values, axbDataType_t value
   return 0;
 }
 
-axbStatus_t axbMatGetValuesDense(axbMat_t mat, void *values, axbDataType_t values_datatype)
+axbStatus_t axbMatGetValuesDense(const struct axbMat_s *mat, void *values, axbDataType_t values_datatype)
 {
   if (mat->storage_type == AXB_STORAGE_DENSE) {
     return axbMemBackendCopyOut(mat->memBackend, mat->values, mat->values_datatype, values, values_datatype, mat->rows * mat->cols);
   } else {
     // TODO: implement
-    return 1;
   }
-  return 0;
+  return 1;
 }
 
-axbStatus_t axbMatGetNonzerosSize(axbMat_t mat, size_t *num_nonzeros)
+axbStatus_t axbMatGetNonzerosSize(const struct axbMat_s *mat, size_t *num_nonzeros)
 {
   if (mat->storage_type == AXB_STORAGE_DENSE) { // count the number of actual nonzeros
     size_t nnz = 0;
@@ -212,7 +211,7 @@ axbStatus_t axbMatGetNonzerosSize(axbMat_t mat, size_t *num_nonzeros)
   return 0;
 }
 
-axbStatus_t axbMatSetValuesCSR(axbMat_t mat,
+axbStatus_t axbMatSetValuesCSR(struct axbMat_s *mat,
                                void *row_markers, axbDataType_t row_markers_datatype,
                                void *col_indices, axbDataType_t col_indices_datatype,
                                void *values, axbDataType_t values_datatype,
@@ -250,7 +249,7 @@ axbStatus_t axbMatSetValuesCSR(axbMat_t mat,
   return 0;
 }
 
-axbStatus_t axbMatGetValuesCSR(axbMat_t mat,
+axbStatus_t axbMatGetValuesCSR(const struct axbMat_s *mat,
                                void *row_markers, axbDataType_t row_markers_datatype,
                                void *col_indices, axbDataType_t col_indices_datatype,
                                void *values, axbDataType_t values_datatype)
@@ -286,7 +285,7 @@ axbStatus_t axbMatGetValuesCSR(axbMat_t mat,
   return 0;
 }
 
-axbStatus_t axbMatDestroy(axbMat_t mat)
+axbStatus_t axbMatDestroy(struct axbMat_s *mat)
 {
   // TODO: Check proper value of mat->init
   mat->init += 1;
@@ -305,34 +304,34 @@ axbStatus_t axbMatDestroy(axbMat_t mat)
 
 // operations
 
-axbStatus_t axbMatVec(axbMat_t A, axbVec_t x, axbVec_t Ax)
+axbStatus_t axbMatVec(const struct axbMat_s *A, const struct axbVec_s *x, struct axbVec_s *Ax)
 {
   axbOpDescriptor_t op_desc = A->opBackend->op_table[AXB_OP_MAT_VEC];
-  axbStatus_t (*op)(axbMat_t, axbVec_t, axbVec_t, void*) = (axbStatus_t (*)(axbMat_t, axbVec_t, axbVec_t, void*)) op_desc.func;
+  axbStatus_t (*op)(const struct axbMat_s *, const struct axbVec_s *, struct axbVec_s *, void*) = (axbStatus_t (*)(const struct axbMat_s *, const struct axbVec_s *, struct axbVec_s *, void*)) op_desc.func;
   op(A, x, Ax, op_desc.func_data);
   return 0;
 }
 
-axbStatus_t axbMatTVec(axbMat_t A, axbVec_t x, axbVec_t ATx)
+axbStatus_t axbMatTVec(const struct axbMat_s *A, const struct axbVec_s *x, struct axbVec_s *ATx)
 {
   axbOpDescriptor_t op_desc = A->opBackend->op_table[AXB_OP_MAT_TVEC];
-  axbStatus_t (*op)(axbMat_t, axbVec_t, axbVec_t, void*) = (axbStatus_t (*)(axbMat_t, axbVec_t, axbVec_t, void*)) op_desc.func;
+  axbStatus_t (*op)(const struct axbMat_s *, const struct axbVec_s *, struct axbVec_s *, void*) = (axbStatus_t (*)(const struct axbMat_s *, const struct axbVec_s *, struct axbVec_s *, void*)) op_desc.func;
   op(A, x, ATx, op_desc.func_data);
   return 0;
 }
 
-axbStatus_t axbMatMat(axbMat_t A, axbMat_t B, axbMat_t *AB)
+axbStatus_t axbMatMat(const struct axbMat_s *A, const struct axbMat_s *B, struct axbMat_s **AB)
 {
   axbOpDescriptor_t op_desc = A->opBackend->op_table[AXB_OP_MAT_MAT];
-  axbStatus_t (*op)(axbMat_t, axbMat_t, axbMat_t*, void*) = (axbStatus_t (*)(axbMat_t, axbMat_t, axbMat_t*, void*)) op_desc.func;
+  axbStatus_t (*op)(const struct axbMat_s *, const struct axbMat_s *, struct axbMat_s **, void*) = (axbStatus_t (*)(const struct axbMat_s *, const struct axbMat_s *, struct axbMat_s **, void*)) op_desc.func;
   op(A, B, AB, op_desc.func_data);
   return 0;
 }
 
-axbStatus_t axbMatTrans(axbMat_t A, axbMat_t *AT)
+axbStatus_t axbMatTrans(const struct axbMat_s *A, struct axbMat_s **AT)
 {
   axbOpDescriptor_t op_desc = A->opBackend->op_table[AXB_OP_MAT_TRANS];
-  axbStatus_t (*op)(axbMat_t, axbMat_t*, void*) = (axbStatus_t (*)(axbMat_t, axbMat_t*, void*)) op_desc.func;
+  axbStatus_t (*op)(const struct axbMat_s *, struct axbMat_s **, void*) = (axbStatus_t (*)(const struct axbMat_s *, struct axbMat_s **, void*)) op_desc.func;
   op(A, AT, op_desc.func_data);
   return 0;
 }

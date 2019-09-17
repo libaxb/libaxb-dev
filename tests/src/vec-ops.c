@@ -9,7 +9,7 @@
 
 
 
-axbStatus_t test(axbVec_t x0, axbVec_t x1, axbVec_t x2, axbVec_t x3, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma,
+axbStatus_t test(struct axbVec_s *x0, struct axbVec_s *x1, struct axbVec_s *x2, struct axbVec_s *x3, struct axbScalar_s *alpha, struct axbScalar_s *beta, struct axbScalar_s *gamma,
                  double *y0, double *y1, double *y2, double *y3, double a, double b, double c)
 {
   size_t n;
@@ -165,9 +165,9 @@ axbStatus_t test(axbVec_t x0, axbVec_t x1, axbVec_t x2, axbVec_t x3, axbScalar_t
   check_equal(x2, y2, temp, "axbVecWAXPY");
 
   //AXB_OP_VEC_MAXPY
-  axbVec_t vecs[3] = {x1, x2, x3};
-  axbScalar_t scalars[3] = {alpha, beta, gamma};
-  AXB_ERR_CHECK(axbVecMAXPY(x0, 3, scalars, vecs));
+  struct axbVec_s *vecs[3] = {x1, x2, x3};
+  struct axbScalar_s *scalars[3] = {alpha, beta, gamma};
+  AXB_ERR_CHECK(axbVecMAXPY(x0, 3, (const struct axbScalar_s * const*)scalars, (const struct axbVec_s * const*)vecs));
   for (size_t i=0; i<n; ++i) y0[i] += a * y1[i] + b * y2[i] + c * y3[i];
   check_equal(x0, y0, temp, "axbVecMAXPY");
 
@@ -186,9 +186,9 @@ axbStatus_t test(axbVec_t x0, axbVec_t x1, axbVec_t x2, axbVec_t x3, axbScalar_t
 }
 
 
-axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t ops)
+axbStatus_t setup(struct axbHandle_s *axb_handle, struct axbMemBackend_s *mem, struct axbOpBackend_s *ops)
 {
-  axbVec_t x0, x1, x2, x3;
+  struct axbVec_s *x0, *x1, *x2, *x3;
   double *y0, *y1, *y2, *y3;
   size_t n = 1297;
 
@@ -208,15 +208,15 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
   AXB_INIT_VECS(x3, y3);
 
   // create scalars:
-  axbScalar_t alpha;
+  struct axbScalar_s *alpha;
   double a = 3.1415;
   AXB_ERR_CHECK(axbScalarCreate(axb_handle, &alpha, &a, AXB_REAL_DOUBLE, mem));
 
-  axbScalar_t beta;
+  struct axbScalar_s *beta;
   double b = 2.717;
   AXB_ERR_CHECK(axbScalarCreate(axb_handle, &beta, &b, AXB_REAL_DOUBLE, mem));
 
-  axbScalar_t gamma;
+  struct axbScalar_s *gamma;
   double c = 1.4142;
   AXB_ERR_CHECK(axbScalarCreate(axb_handle, &gamma, &c, AXB_REAL_DOUBLE, mem));
 
@@ -237,7 +237,7 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
 
 int main(int argc, char **argv)
 {
-  axbHandle_t axbHandle;
+  struct axbHandle_s *axbHandle;
   const char *mem_backend_name = argv[1];
   const char *op_backend_name = argv[2];
 
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
   printf("Initializing libaxb...\n");
   AXB_ERR_CHECK(axbInit(&axbHandle));
 
-  axbMemBackend_t mem_backend;
+  struct axbMemBackend_s *mem_backend;
   AXB_ERR_CHECK(axbMemBackendGetByName(axbHandle, &mem_backend, mem_backend_name));
   if (!mem_backend) {
     fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
   }
   printf("Using memory backend %s\n", mem_backend_name);
 
-  axbOpBackend_t op_backend;
+  struct axbOpBackend_s *op_backend;
   AXB_ERR_CHECK(axbOpBackendGetByName(axbHandle, &op_backend, op_backend_name));
   if (!op_backend) {
     fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);

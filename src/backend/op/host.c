@@ -15,46 +15,46 @@
  *  Backend-agnostic checks like correct data types or compatible vector sizes are assumed to be checked at a higher level (->backend-agnostic), rather than being duplicated in each worker routine.
  */
 
-static axbStatus_t op_vec_set(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_set(struct axbVec_s *x, const struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_alpha = (double*) alpha->data;
+        double *d_x     =       (double*)x->data;
+  const double *d_alpha = (const double*)alpha->data;
 
   for (size_t i=0; i<x->size; ++i) d_x[i] = *d_alpha;
 
   return 0;
 }
 
-static axbStatus_t op_vec_sqrtabs(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_sqrtabs(struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
+  double *d_x = (double*)x->data;
 
   for (size_t i=0; i<x->size; ++i) d_x[i] = sqrt(fabs(d_x[i]));
 
   return 0;
 }
 
-static axbStatus_t op_vec_zero(axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_zero(struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
+  double *d_x = (double*)x->data;
 
   for (size_t i=0; i<x->size; ++i) d_x[i] = 0;
 
   return 0;
 }
 
-static axbStatus_t op_vec_scale(axbVec_t x, axbScalar_t alpha, void *aux_data)
+static axbStatus_t op_vec_scale(struct axbVec_s *x, const struct axbScalar_s *alpha, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_alpha = (double*) alpha->data;
+        double *d_x     =       (double*)x->data;
+  const double *d_alpha = (const double*)alpha->data;
 
   for (size_t i=0; i<x->size; ++i) d_x[i] *= *d_alpha;
 
@@ -63,13 +63,13 @@ static axbStatus_t op_vec_scale(axbVec_t x, axbScalar_t alpha, void *aux_data)
 
 //////// reductions
 
-static axbStatus_t op_vec_sum(axbVec_t x, axbScalar_t sum, void *aux_data)
+static axbStatus_t op_vec_sum(const struct axbVec_s *x, struct axbScalar_s *sum, void *aux_data)
 {
   assert(sum->datatype == AXB_REAL_DOUBLE);
   (void)aux_data;
 
-  double *d_x   = x->data;
-  double *d_sum = (double*) sum->data;
+  const double *d_x   = (const double*)x->data;
+        double *d_sum =       (double*)sum->data;
 
   double s = 0;
   for (size_t i=0; i<x->size; ++i) s += d_x[i];
@@ -78,13 +78,13 @@ static axbStatus_t op_vec_sum(axbVec_t x, axbScalar_t sum, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_dot(axbVec_t x, axbVec_t y, axbScalar_t dot, void *aux_data)
+static axbStatus_t op_vec_dot(const struct axbVec_s *x, const struct axbVec_s *y, struct axbScalar_s *dot, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_y     = y->data;
-  double *d_dot = (double*) dot->data;
+  const double *d_x   = (const double*)x->data;
+  const double *d_y   = (const double*)y->data;
+        double *d_dot = (double*)dot->data;
 
   double d = 0;
   for (size_t i=0; i<y->size; ++i) d += d_x[i] * d_y[i];
@@ -93,13 +93,13 @@ static axbStatus_t op_vec_dot(axbVec_t x, axbVec_t y, axbScalar_t dot, void *aux
   return 0;
 }
 
-static axbStatus_t op_vec_tdot(axbVec_t x, axbVec_t y, axbScalar_t tdot, void *aux_data)
+static axbStatus_t op_vec_tdot(const struct axbVec_s *x, const struct axbVec_s *y, struct axbScalar_s *tdot, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_y     = y->data;
-  double *d_tdot = (double*) tdot->data;
+  const double *d_x    = (const double*)x->data;
+  const double *d_y    = (const double*)y->data;
+        double *d_tdot =       (double*)tdot->data;
 
   double t = 0;
   for (size_t i=0; i<x->size; ++i) t += d_x[i] * d_y[i];
@@ -108,11 +108,11 @@ static axbStatus_t op_vec_tdot(axbVec_t x, axbVec_t y, axbScalar_t tdot, void *a
   return 0;
 }
 
-static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, axbScalar_t *mdot, void *aux_data)
+static axbStatus_t op_vec_mdot(const struct axbVec_s *x, size_t num_vecs, const struct axbVec_s **y, struct axbScalar_s **mdot, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x    = x->data;
+  const double *d_x = x->data;
   double val_x = 0;
 
   // auxiliary variables
@@ -129,9 +129,9 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
     case 3:
       for (size_t i=0; i<x->size; ++i) {
         val_x = d_x[i];
-        m[0] += val_x * ((double*)y[0])[i];
-        m[1] += val_x * ((double*)y[1])[i];
-        m[2] += val_x * ((double*)y[2])[i];
+        m[0] += val_x * ((const double*)y[0]->data)[i];
+        m[1] += val_x * ((const double*)y[1]->data)[i];
+        m[2] += val_x * ((const double*)y[2]->data)[i];
       }
       *((double*)mdot[0]->data) = m[0];
       *((double*)mdot[1]->data) = m[1];
@@ -142,8 +142,8 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
     case 2:
       for (size_t i=0; i<x->size; ++i) {
         val_x = d_x[i];
-        m[0] += val_x * ((double*)y[0])[i];
-        m[1] += val_x * ((double*)y[1])[i];
+        m[0] += val_x * ((const double*)y[0]->data)[i];
+        m[1] += val_x * ((const double*)y[1]->data)[i];
       }
       *((double*)mdot[0]->data) = m[0];
       *((double*)mdot[1]->data) = m[1];
@@ -152,7 +152,7 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
       break;
     case 1:
       for (size_t i=0; i<x->size; ++i) {
-        m[0] += d_x[i] * ((double*)y[0])[i];
+        m[0] += d_x[i] * ((const double*)y[0]->data)[i];
       }
       *((double*)mdot[0]->data) = m[0];
 
@@ -161,10 +161,10 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
     default:
       for (size_t i=0; i<x->size; ++i) {
         val_x = d_x[i];
-        m[0] += val_x * ((double*)y[0])[i];
-        m[1] += val_x * ((double*)y[1])[i];
-        m[2] += val_x * ((double*)y[2])[i];
-        m[3] += val_x * ((double*)y[3])[i];
+        m[0] += val_x * ((const double*)y[0]->data)[i];
+        m[1] += val_x * ((const double*)y[1]->data)[i];
+        m[2] += val_x * ((const double*)y[2]->data)[i];
+        m[3] += val_x * ((const double*)y[3]->data)[i];
       }
       *((double*)mdot[0]->data) = m[0];
       *((double*)mdot[1]->data) = m[1];
@@ -181,12 +181,12 @@ static axbStatus_t op_vec_mdot(axbVec_t x, size_t num_vecs, const axbVec_t *y, a
   return 0;
 }
 
-static axbStatus_t op_vec_norm1(axbVec_t x, axbScalar_t norm, void *aux_data)
+static axbStatus_t op_vec_norm1(const struct axbVec_s *x, struct axbScalar_s *norm, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_norm = (double*) norm->data;
+  const double *d_x    = (const double*)x->data;
+        double *d_norm =       (double*)norm->data;
 
   double n = 0;
   for (size_t i=0; i<x->size; ++i) n += fabs(d_x[i]);
@@ -195,12 +195,12 @@ static axbStatus_t op_vec_norm1(axbVec_t x, axbScalar_t norm, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_norm2(axbVec_t x, axbScalar_t norm, void *aux_data)
+static axbStatus_t op_vec_norm2(const struct axbVec_s *x, struct axbScalar_s *norm, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_norm = (double*) norm->data;
+  const double *d_x    = (const double*)x->data;
+        double *d_norm =       (double*)norm->data;
 
   double n = 0;
   for (size_t i=0; i<x->size; ++i) n += d_x[i] * d_x[i];
@@ -209,12 +209,12 @@ static axbStatus_t op_vec_norm2(axbVec_t x, axbScalar_t norm, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_norminf(axbVec_t x, axbScalar_t norm, void *aux_data)
+static axbStatus_t op_vec_norminf(const struct axbVec_s *x, struct axbScalar_s *norm, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_norm = (double*) norm->data;
+  const double *d_x    = (const double*)x->data;
+        double *d_norm =       (double*)norm->data;
 
   double n = 0;
   for (size_t i=0; i<x->size; ++i) {
@@ -225,14 +225,14 @@ static axbStatus_t op_vec_norminf(axbVec_t x, axbScalar_t norm, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_dotnorm2(axbVec_t s, axbVec_t t, axbScalar_t dot_st, axbScalar_t norm_t, void *aux_data)
+static axbStatus_t op_vec_dotnorm2(const struct axbVec_s *s, const struct axbVec_s *t, struct axbScalar_s *dot_st, struct axbScalar_s *norm_t, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_s    = s->data;
-  double *d_t    = t->data;
-  double *d_dot  = (double*) dot_st->data;
-  double *d_norm = (double*) norm_t->data;
+  const double *d_s    = (const double*)s->data;
+  const double *d_t    = (const double*)t->data;
+        double *d_dot  =       (double*)dot_st->data;
+        double *d_norm =       (double*)norm_t->data;
 
   double d = 0;
   double n = 0;
@@ -246,7 +246,7 @@ static axbStatus_t op_vec_dotnorm2(axbVec_t s, axbVec_t t, axbScalar_t dot_st, a
   return 0;
 }
 
-static axbStatus_t op_vec_max(axbVec_t x, size_t *idx, axbScalar_t m, void *aux_data)
+static axbStatus_t op_vec_max(const struct axbVec_s *x, size_t *idx, struct axbScalar_s *m, void *aux_data)
 {
   (void)aux_data;
 
@@ -266,12 +266,12 @@ static axbStatus_t op_vec_max(axbVec_t x, size_t *idx, axbScalar_t m, void *aux_
   return 0;
 }
 
-static axbStatus_t op_vec_min(axbVec_t x, size_t *idx, axbScalar_t m, void *aux_data)
+static axbStatus_t op_vec_min(const struct axbVec_s *x, size_t *idx, struct axbScalar_s *m, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x   = x->data;
-  double *d_min = (double*) m->data;
+  const double *d_x   = (const double*)x->data;
+        double *d_min =       (double*)m->data;
 
   double cur_min = d_x[0];
   *idx = 0;
@@ -288,24 +288,24 @@ static axbStatus_t op_vec_min(axbVec_t x, size_t *idx, axbScalar_t m, void *aux_
 
 /////////////// vector-vector
 
-static axbStatus_t op_vec_copy(axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_copy(const struct axbVec_s *x, struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+  const double *d_x = (const double*)x->data;
+        double *d_y =       (double*)y->data;
 
   for (size_t i=0; i<x->size; ++i) d_y[i] = d_x[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_swap(axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_swap(struct axbVec_s *x, struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+  double *d_x = (double*)x->data;
+  double *d_y = (double*)y->data;
 
   for (size_t i=0; i<y->size; ++i) {
     double t = d_x[i];
@@ -316,73 +316,73 @@ static axbStatus_t op_vec_swap(axbVec_t x, axbVec_t y, void *aux_data)
   return 0;
 }
 
-static axbStatus_t op_vec_axpy(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_axpy(struct axbVec_s *y, const struct axbScalar_s *alpha, const struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_y     = y->data;
-  double *d_alpha = (double*) alpha->data;
-  double *d_x     = x->data;
+        double *d_y     =       (double*)y->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
 
   for (size_t i=0; i<y->size; ++i) d_y[i] += *d_alpha * d_x[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_aypx(axbVec_t y, axbScalar_t alpha, axbVec_t x, void *aux_data)
+static axbStatus_t op_vec_aypx(struct axbVec_s *y, const struct axbScalar_s *alpha, const struct axbVec_s *x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_y     = y->data;
-  double *d_alpha = (double*) alpha->data;
-  double *d_x     = x->data;
+        double *d_y     =       (double*)y->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
 
   for (size_t i=0; i<y->size; ++i) d_y[i] = *d_alpha * d_y[i] + d_x[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_axpbypcz(axbVec_t z, axbScalar_t alpha, axbScalar_t beta, axbScalar_t gamma, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_axpbypcz(struct axbVec_s *z, const struct axbScalar_s *alpha, const struct axbScalar_s *beta, const struct axbScalar_s *gamma, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_z     = z->data;
-  double *d_alpha = (double*) alpha->data;
-  double *d_beta  = (double*) beta->data;
-  double *d_gamma = (double*) gamma->data;
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+        double *d_z     =       (double*)z->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_beta  = (const double*)beta->data;
+  const double *d_gamma = (const double*)gamma->data;
+  const double *d_x     = (const double*)x->data;
+  const double *d_y     = (const double*)y->data;
 
   for (size_t i=0; i<z->size; ++i) d_z[i] = *d_alpha * d_x[i] + *d_beta * d_y[i] + *d_gamma * d_z[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_waxpy(axbVec_t w, axbScalar_t alpha, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_waxpy(struct axbVec_s *w, const struct axbScalar_s *alpha, struct axbVec_s *x, struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = w->data;
-  double *d_alpha = (double*) alpha->data;
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+        double *d_w     =       (double*)w->data;
+  const double *d_alpha = (const double*)alpha->data;
+  const double *d_x     = (const double*)x->data;
+  const double *d_y     = (const double*)y->data;
 
   for (size_t i=0; i<y->size; ++i) d_w[i] = *d_alpha * d_x[i] + d_y[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_maxpy(axbVec_t y, size_t num_vecs, const axbScalar_t *alpha, const axbVec_t *x, void *aux_data)
+static axbStatus_t op_vec_maxpy(struct axbVec_s *y, size_t num_vecs, const struct axbScalar_s **alpha, const struct axbVec_s **x, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_y     = y->data;
+  double *d_y = y->data;
 
   for (size_t i=0; i<y->size; ++i) {
     double ax = 0;
     for (size_t j=0; j<num_vecs; ++j) {
-      double *d_alpha = (double*) alpha[j]->data;
-      double *d_x     = x[j]->data;
+      const double *d_alpha = (const double*)alpha[j]->data;
+      const double *d_x     = (const double*)x[j]->data;
 
       ax += *d_alpha * d_x[i];
     }
@@ -392,26 +392,26 @@ static axbStatus_t op_vec_maxpy(axbVec_t y, size_t num_vecs, const axbScalar_t *
   return 0;
 }
 
-static axbStatus_t op_vec_pointwisemult(axbVec_t w, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_pointwisemult(struct axbVec_s *w, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = w->data;
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+        double *d_w =       (double*)w->data;
+  const double *d_x = (const double*)x->data;
+  const double *d_y = (const double*)y->data;
 
   for (size_t i=0; i<w->size; ++i) d_w[i] = d_x[i] * d_y[i];
 
   return 0;
 }
 
-static axbStatus_t op_vec_pointwisediv(axbVec_t w, axbVec_t x, axbVec_t y, void *aux_data)
+static axbStatus_t op_vec_pointwisediv(struct axbVec_s *w, const struct axbVec_s *x, const struct axbVec_s *y, void *aux_data)
 {
   (void)aux_data;
 
-  double *d_w     = w->data;
-  double *d_x     = x->data;
-  double *d_y     = y->data;
+        double *d_w =       (double*)w->data;
+  const double *d_x = (const double*)x->data;
+  const double *d_y = (const double*)y->data;
 
   for (size_t i=0; i<w->size; ++i) d_w[i] = d_x[i] / d_y[i];
 
@@ -421,15 +421,16 @@ static axbStatus_t op_vec_pointwisediv(axbVec_t w, axbVec_t x, axbVec_t y, void 
 //
 // Matrix operations
 //
-static axbStatus_t op_mat_csr_vec(axbMat_t A, axbVec_t x, axbVec_t Ax, void *aux_data)
+static axbStatus_t op_mat_csr_vec(const struct axbMat_s *A, const struct axbVec_s *x, struct axbVec_s *Ax, void *aux_data)
 {
   (void)aux_data;
 
-  int    *A_row_markers = A->row_markers;
-  int    *A_col_indices = A->col_indices;
-  double *A_values      = A->values;
-  double *d_x           = x->data;
-  double *d_Ax          = Ax->data;
+  const int    *A_row_markers = (const int*)A->row_markers;
+  const int    *A_col_indices = (const int*)A->col_indices;
+  const double *A_values      = (const double*)A->values;
+  const double *d_x           = (const double*)x->data;
+
+  double *d_Ax = (double*)Ax->data;
 
   for (size_t i=0; i<A->rows; ++i) {
     double val = 0;
@@ -442,15 +443,16 @@ static axbStatus_t op_mat_csr_vec(axbMat_t A, axbVec_t x, axbVec_t Ax, void *aux
   return 0;
 }
 
-static axbStatus_t op_mat_csr_tvec(axbMat_t A, axbVec_t x, axbVec_t ATx, void *aux_data)
+static axbStatus_t op_mat_csr_tvec(struct axbMat_s *A, struct axbVec_s *x, struct axbVec_s *ATx, void *aux_data)
 {
   (void)aux_data;
 
-  int    *A_row_markers = A->row_markers;
-  int    *A_col_indices = A->col_indices;
-  double *A_values      = A->values;
-  double *d_x           = x->data;
-  double *d_ATx         = ATx->data;
+  const int    *A_row_markers = (const int*)A->row_markers;
+  const int    *A_col_indices = (const int*)A->col_indices;
+  const double *A_values      = (const double*)A->values;
+  const double *d_x           = (const double*)x->data;
+
+  double *d_ATx = (double*)ATx->data;
 
   for (size_t i=0; i<A->cols; ++i) d_ATx[i] = 0;
 
@@ -464,7 +466,7 @@ static axbStatus_t op_mat_csr_tvec(axbMat_t A, axbVec_t x, axbVec_t ATx, void *a
   return 0;
 }
 
-static axbStatus_t op_mat_csr_mat(axbMat_t A, axbMat_t B, axbMat_t *AB, void *aux_data)
+static axbStatus_t op_mat_csr_mat(const struct axbMat_s *A, const struct axbMat_s *B, struct axbMat_s **AB, void *aux_data)
 {
   (void)A; (void)B; (void)AB;
   (void)aux_data;
@@ -473,7 +475,7 @@ static axbStatus_t op_mat_csr_mat(axbMat_t A, axbMat_t B, axbMat_t *AB, void *au
   return 0;
 }
 
-static axbStatus_t op_mat_csr_trans(axbMat_t A, axbMat_t *AT, void *aux_data)
+static axbStatus_t op_mat_csr_trans(const struct axbMat_s *A, struct axbMat_s **AT, void *aux_data)
 {
   (void)aux_data;
   axbStatus_t status;
@@ -544,9 +546,9 @@ static axbStatus_t op_mat_csr_trans(axbMat_t A, axbMat_t *AT, void *aux_data)
 // Registration of routines
 //
 
-axbStatus_t axbOpBackendRegister_Host(axbHandle_t handle)
+axbStatus_t axbOpBackendRegister_Host(struct axbHandle_s *handle)
 {
-  axbOpBackend_t host_backend;
+  struct axbOpBackend_s *host_backend;
   axbStatus_t status = axbOpBackendCreate(&host_backend); AXB_ERRCHK(status);
 
   // populate host_backend:

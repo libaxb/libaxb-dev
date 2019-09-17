@@ -4,7 +4,7 @@
 
 #include "libaxb.h"
 
-axbStatus_t axbMemBackendRegister_CUDA(axbHandle_t handle);
-axbStatus_t axbOpBackendRegister_CUDA(axbHandle_t handle);
+axbStatus_t axbMemBackendRegister_CUDA(struct axbHandle_s *handle);
+axbStatus_t axbOpBackendRegister_CUDA(struct axbHandle_s *handle);
 
 #endif

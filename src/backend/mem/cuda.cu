@@ -41,9 +41,9 @@ static axbStatus_t cuda_copyout(void *src, axbDataType_t src_type, void *dest, a
   return cudaMemcpy(dest, src, sizeof(double) * n, cudaMemcpyDeviceToHost);
 }
 
-extern "C" axbStatus_t axbMemBackendRegister_CUDA(axbHandle_t handle)
+extern "C" axbStatus_t axbMemBackendRegister_CUDA(struct axbHandle_s *handle)
 {
-  axbMemBackend_t cuda_backend;
+  struct axbMemBackend_s *cuda_backend;
   axbMemBackendCreate(&cuda_backend);
 
   // populate host_backend:

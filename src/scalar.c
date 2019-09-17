@@ -4,7 +4,7 @@
 #include "libaxb/general.h"
 
 
-axbStatus_t axbScalarCreateBegin(axbHandle_t handle, axbScalar_t *scalar)
+axbStatus_t axbScalarCreateBegin(struct axbHandle_s *handle, struct axbScalar_s **scalar)
 {
   *scalar = malloc(sizeof(struct axbScalar_s));
   (*scalar)->handle = handle;
@@ -22,33 +22,35 @@ axbStatus_t axbScalarCreateBegin(axbHandle_t handle, axbScalar_t *scalar)
   return 0;
 }
 
-axbStatus_t axbScalarSetDataType(axbScalar_t scalar, axbDataType_t datatype)
+axbStatus_t axbScalarSetDataType(struct axbScalar_s *scalar, axbDataType_t datatype)
 {
   scalar->datatype = datatype;
   return 0;
 }
-axbStatus_t axbScalarSetMemBackend(axbScalar_t scalar, axbMemBackend_t mem)
+
+axbStatus_t axbScalarSetMemBackend(struct axbScalar_s *scalar, struct axbMemBackend_s *mem)
 {
   if (mem) scalar->memBackend = mem;
   return 0;
 }
-axbStatus_t axbScalarCreateEnd(axbScalar_t scalar)
+
+axbStatus_t axbScalarCreateEnd(struct axbScalar_s *scalar)
 {
   return scalar->memBackend->op_malloc( &(scalar->data), sizeof(double), scalar->memBackend->impl);
 }
 
-axbStatus_t axbScalarSetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype)
+axbStatus_t axbScalarSetValue(struct axbScalar_s *scalar, void *value, axbDataType_t value_datatype)
 {
   return axbMemBackendCopyIn(scalar->memBackend, value, value_datatype, scalar->data, scalar->datatype, 1);
 }
 
-axbStatus_t axbScalarGetValue(axbScalar_t scalar, void *value, axbDataType_t value_datatype)
+axbStatus_t axbScalarGetValue(const struct axbScalar_s *scalar, void *value, axbDataType_t value_datatype)
 {
   return axbMemBackendCopyOut(scalar->memBackend, scalar->data, scalar->datatype, value, value_datatype, 1);
 }
 
 // convenience routine?
-axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value, axbDataType_t datatype, axbMemBackend_t mem)
+axbStatus_t axbScalarCreate(struct axbHandle_s *handle, struct axbScalar_s **scalar, void *value, axbDataType_t datatype, struct axbMemBackend_s *mem)
 {
   axbScalarCreateBegin(handle, scalar);
   axbScalarSetDataType(*scalar, datatype);
@@ -59,7 +61,7 @@ axbStatus_t axbScalarCreate(axbHandle_t handle, axbScalar_t *scalar, void *value
 }
 
 
-axbStatus_t axbScalarDestroy(axbScalar_t scalar)
+axbStatus_t axbScalarDestroy(struct axbScalar_s *scalar)
 {
   if (scalar->init != 896283) return 896283;
   scalar->init += 1;

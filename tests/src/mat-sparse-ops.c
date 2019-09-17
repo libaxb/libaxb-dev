@@ -9,7 +9,7 @@
 
 
 
-axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
+axbStatus_t test(struct axbMat_s *A, struct axbMat_s *B, struct axbVec_s *x0, struct axbVec_s *x1)
 {
   (void)B;
   size_t rows, cols, nonzeros;
@@ -61,7 +61,7 @@ axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
 
 
   // AXB_OP_MAT_TRANS
-  axbMat_t C, D;
+  struct axbMat_s *C, *D;
   AXB_ERR_CHECK(axbMatTrans(A, &C));
   AXB_ERR_CHECK(axbMatVec(C, x0, x1));
   check_equal(x1, y_host, temp, "axbMatTrans (via axbMatVec)");
@@ -88,9 +88,9 @@ axbStatus_t test(axbMat_t A, axbMat_t B, axbVec_t x0, axbVec_t x1)
 
 
 
-axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t ops)
+axbStatus_t setup(struct axbHandle_s *axb_handle, struct axbMemBackend_s *mem, struct axbOpBackend_s *ops)
 {
-  axbVec_t x0, x1;
+  struct axbVec_s *x0, *x1;
   size_t n = 154534;
   double *temp = malloc(sizeof(double) * n);
 
@@ -108,7 +108,7 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
   AXB_INIT_VEC(x1);
 
   // create matrices:
-  axbMat_t A;
+  struct axbMat_s *A;
   AXB_ERR_CHECK(axbMatCreateBegin(axb_handle, &A));
   AXB_ERR_CHECK(axbMatSetSizes(A, n, n));
   AXB_ERR_CHECK(axbMatSetMemBackend(A, mem));
@@ -117,7 +117,7 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
   AXB_ERR_CHECK(axbMatCreateEnd(A));
   AXB_ERR_CHECK(initMatSparseRandom(A, 5));
 
-  axbMat_t B;
+  struct axbMat_s *B;
   AXB_ERR_CHECK(axbMatCreateBegin(axb_handle, &B));
   AXB_ERR_CHECK(axbMatSetSizes(B, n, n));
   AXB_ERR_CHECK(axbMatSetMemBackend(B, mem));
@@ -144,7 +144,7 @@ axbStatus_t setup(axbHandle_t axb_handle, axbMemBackend_t mem, axbOpBackend_t op
 
 int main(int argc, char **argv)
 {
-  axbHandle_t axbHandle;
+  struct axbHandle_s *axbHandle;
   const char *mem_backend_name = argv[1];
   const char *op_backend_name = argv[2];
 
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
   printf("Initializing libaxb...\n");
   AXB_ERR_CHECK(axbInit(&axbHandle));
 
-  axbMemBackend_t mem_backend;
+  struct axbMemBackend_s *mem_backend;
   AXB_ERR_CHECK(axbMemBackendGetByName(axbHandle, &mem_backend, mem_backend_name));
   if (!mem_backend) {
     fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   }
   printf("Using memory backend %s\n", mem_backend_name);
 
-  axbOpBackend_t op_backend;
+  struct axbOpBackend_s *op_backend;
   AXB_ERR_CHECK(axbOpBackendGetByName(axbHandle, &op_backend, op_backend_name));
   if (!op_backend) {
     fprintf(stderr, "ERROR: Cannot find memory backend %s\n", mem_backend_name);

@@ -4,14 +4,12 @@
 
 #include "libaxb.h"
 
-axbStatus_t axbMemBackendRegister_OpenCL(axbHandle_t handle);
-axbStatus_t axbOpBackendRegister_OpenCL(axbHandle_t handle);
+axbStatus_t axbMemBackendRegister_OpenCL(struct axbHandle_s *handle);
+axbStatus_t axbOpBackendRegister_OpenCL(struct axbHandle_s *handle);
 
 #ifdef LIBAXB_ENABLE_OPENCL
 
 #include "CL/cl.h"
-
-typedef struct axbMemOpenCL_s *axbMemOpenCL_t;
 
 struct axbMemOpenCL_s
 {

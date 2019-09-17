@@ -4,7 +4,7 @@
 
 #include "libaxb.h"
 
-axbStatus_t axbMemBackendRegister_Host(axbHandle_t handle);
-axbStatus_t axbOpBackendRegister_Host(axbHandle_t handle);
+axbStatus_t axbMemBackendRegister_Host(struct axbHandle_s *handle);
+axbStatus_t axbOpBackendRegister_Host(struct axbHandle_s *handle);
 
 #endif

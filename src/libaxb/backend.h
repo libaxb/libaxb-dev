@@ -57,11 +57,11 @@ extern "C"
 {
 #endif
 
-axbStatus_t axbMemBackendRegisterDefaults(axbHandle_t handle);
-axbStatus_t axbMemBackendSetValues(axbMemBackend_t mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
-axbStatus_t axbMemBackendGetValues(axbMemBackend_t mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
+axbStatus_t axbMemBackendRegisterDefaults(struct axbHandle_s *handle);
+axbStatus_t axbMemBackendSetValues(struct axbMemBackend_s *mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
+axbStatus_t axbMemBackendGetValues(struct axbMemBackend_s *mem, void *src, axbDataType_t src_data, void *dest, void *dest_data);
 
-axbStatus_t axbOpBackendRegisterDefaults(axbHandle_t handle);
+axbStatus_t axbOpBackendRegisterDefaults(struct axbHandle_s *handle);
 
 
 #ifdef __cplusplus

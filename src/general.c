@@ -6,13 +6,13 @@
 #include "libaxb/general.h"
 
 
-axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t mem)
+axbStatus_t axbMemBackendRegister(struct axbHandle_s *handle, struct axbMemBackend_s *mem)
 {
   // check if there is still room for another backend. If not, resize array:
   if (handle->memBackends_size == handle->memBackends_capacity) {
-    axbMemBackend_t *old_array = handle->memBackends;
+    struct axbMemBackend_s **old_array = handle->memBackends;
     handle->memBackends_capacity *= 2;
-    handle->memBackends = malloc(handle->memBackends_capacity * sizeof(axbMemBackend_t));
+    handle->memBackends = malloc(handle->memBackends_capacity * sizeof(struct axbMemBackend_s *));
 
     // copy over existing backends:
     for (size_t i=0; i<handle->memBackends_size; ++i) handle->memBackends[i] = old_array[i];
@@ -24,14 +24,14 @@ axbStatus_t axbMemBackendRegister(axbHandle_t handle, axbMemBackend_t mem)
   return 0;
 }
 
-axbStatus_t axbMemBackendGetAll(axbHandle_t handle, axbMemBackend_t **mem, size_t *mem_size)
+axbStatus_t axbMemBackendGetAll(struct axbHandle_s *handle, struct axbMemBackend_s ***mem, size_t *mem_size)
 {
   *mem = handle->memBackends;
   *mem_size = handle->memBackends_size;
   return 0;
 }
 
-axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, const char *name)
+axbStatus_t axbMemBackendGetByName(struct axbHandle_s *handle, struct axbMemBackend_s **mem, const char *name)
 {
   *mem = NULL;
   for (size_t i=0; i<handle->memBackends_size; ++i){
@@ -46,13 +46,13 @@ axbStatus_t axbMemBackendGetByName(axbHandle_t handle, axbMemBackend_t *mem, con
 
 ///////////////
 
-axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t ops)
+axbStatus_t axbOpBackendRegister(struct axbHandle_s *handle, struct axbOpBackend_s *ops)
 {
   // check if there is still room for another backend. If not, resize array:
   if (handle->opBackends_size == handle->opBackends_capacity) {
-    axbOpBackend_t *old_array = handle->opBackends;
+    struct axbOpBackend_s **old_array = handle->opBackends;
     handle->opBackends_capacity *= 2;
-    handle->opBackends = malloc(handle->opBackends_capacity * sizeof(axbOpBackend_t));
+    handle->opBackends = malloc(handle->opBackends_capacity * sizeof(struct axbOpBackend_s *));
 
     // copy over existing backends:
     for (size_t i=0; i<handle->opBackends_size; ++i) handle->opBackends[i] = old_array[i];
@@ -64,14 +64,14 @@ axbStatus_t axbOpBackendRegister(axbHandle_t handle, axbOpBackend_t ops)
   return 0;
 }
 
-axbStatus_t axbOpBackendGetAll(axbHandle_t handle, axbOpBackend_t **ops, size_t *ops_size)
+axbStatus_t axbOpBackendGetAll(struct axbHandle_s *handle, struct axbOpBackend_s ***ops, size_t *ops_size)
 {
   *ops = handle->opBackends;
   *ops_size = handle->opBackends_size;
   return 0;
 }
 
-axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const char *name)
+axbStatus_t axbOpBackendGetByName(struct axbHandle_s *handle, struct axbOpBackend_s **ops, const char *name)
 {
   *ops = NULL;
   for (size_t i=0; i<handle->opBackends_size; ++i){
@@ -85,20 +85,20 @@ axbStatus_t axbOpBackendGetByName(axbHandle_t handle, axbOpBackend_t *ops, const
 
 /////////////////
 
-axbStatus_t axbInit(axbHandle_t *handle)
+axbStatus_t axbInit(struct axbHandle_s **handle)
 {
   *handle = malloc(sizeof(struct axbHandle_s));
   (*handle)->init = 424242; // magic number to indicate proper initialization (and track repeated free's)
 
   (*handle)->memBackends_capacity = 10;
   (*handle)->memBackends_size = 0;
-  (*handle)->memBackends = malloc((*handle)->memBackends_capacity * sizeof(axbMemBackend_t));
+  (*handle)->memBackends = malloc((*handle)->memBackends_capacity * sizeof(struct axbMemBackend_s *));
 
   axbMemBackendRegisterDefaults(*handle);
 
   (*handle)->opBackends_capacity = 10;
   (*handle)->opBackends_size = 0;
-  (*handle)->opBackends = malloc((*handle)->opBackends_capacity * sizeof(axbMemBackend_t));
+  (*handle)->opBackends = malloc((*handle)->opBackends_capacity * sizeof(struct axbMemBackend_s *));
 
   axbOpBackendRegisterDefaults(*handle);
 
@@ -107,7 +107,7 @@ axbStatus_t axbInit(axbHandle_t *handle)
 
 
 
-axbStatus_t axbFinalize(axbHandle_t handle)
+axbStatus_t axbFinalize(struct axbHandle_s *handle)
 {
   // guard against multiple free()
   if (handle->init != 424242) return 424242;

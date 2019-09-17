@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv)
 {
-  axbHandle_t axbHandle;
+  struct axbHandle_s *axbHandle;
 
   long backend_idx = 0;
   if (argc > 1)
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   AXB_ERR_CHECK(axbInit(&axbHandle));
 
   printf("Available memory backends:\n");
-  axbMemBackend_t *mem_backends;
+  struct axbMemBackend_s **mem_backends;
   size_t num_backends;
   AXB_ERR_CHECK(axbMemBackendGetAll(axbHandle, &mem_backends, &num_backends));
   for (size_t i=0; i<num_backends; ++i) {
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
   }
 
   printf("Available operation backends:\n");
-  axbOpBackend_t *op_backends;
+  struct axbOpBackend_s **op_backends;
   AXB_ERR_CHECK(axbOpBackendGetAll(axbHandle, &op_backends, &num_backends));
   for (size_t i=0; i<num_backends; ++i) {
     const char *backend_name;
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   }
 
   double ones[] = {1, 1, 1, 1, 1};
-  axbVec_t x;
+  struct axbVec_s *x;
   AXB_ERR_CHECK(axbVecCreateBegin(axbHandle, &x));
   AXB_ERR_CHECK(axbVecSetSize(x, 5));
   AXB_ERR_CHECK(axbVecSetMemBackend(x, mem_backends[backend_idx]));
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   AXB_ERR_CHECK(axbVecSetValues(x, ones, AXB_REAL_DOUBLE));
 
   double twos[] = {2, 2, 2, 2, 2};
-  axbVec_t y;
+  struct axbVec_s * y;
   AXB_ERR_CHECK(axbVecCreateBegin(axbHandle, &y));
   AXB_ERR_CHECK(axbVecSetSize(y, 5));
   AXB_ERR_CHECK(axbVecSetMemBackend(y, mem_backends[backend_idx]));
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
   AXB_ERR_CHECK(axbVecSetValues(y, twos, AXB_REAL_DOUBLE));
 
   double three = 3.0;
-  axbScalar_t alpha;
+  struct axbScalar_s *alpha;
   AXB_ERR_CHECK(axbScalarCreate(axbHandle, &alpha, &three, AXB_REAL_DOUBLE, mem_backends[backend_idx]));
   AXB_ERR_CHECK(axbVecAXPY(y, alpha, x));
 
