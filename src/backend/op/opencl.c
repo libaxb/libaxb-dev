@@ -80,6 +80,34 @@ static const char * my_compute_program =
 "  for (unsigned int i = get_global_id(0); i < size; i += get_global_size(0))\n"
 "    y[i] += *alpha * x[i];\n"
 "}\n"
+""
+"static void reduce_local_mem_plus(__local double *buffer) {\n"
+"  for (unsigned int stride = get_local_size(0)/2; stride > 0; stride /= 2)\n"
+"  {\n"
+"    barrier(CLK_LOCAL_MEM_FENCE);\n"
+"    if (get_local_id(0) < stride)\n"
+"      buffer[get_local_id(0)] += buffer[get_local_id(0)+stride];\n"
+"  }\n"
+"}"
+"__kernel void vec_sum1(__global const double *x, __global double *temp, unsigned int size)\n"      // reduce within multiple workgroups, store in temporary array (one partial reduction per workgroup)
+"{\n"
+"  __local double reduction_buffer[256];\n"
+"  double t = 0;\n"
+"  for (int i = get_global_id(0); i < size; i += get_global_size(0)) t += x[i];\n"
+""
+"  reduction_buffer[get_local_id(0)] = t;\n"
+"  reduce_local_mem_plus(reduction_buffer);"
+"  if (get_local_id(0) == 0)\n"
+"    temp[get_group_id(0)] = reduction_buffer[0];\n"
+"}\n"
+"__kernel void vec_sum2(__global const double *temp, __global double *alpha)\n"   // reduce within single workgroup
+"{\n"
+"  __local double reduction_buffer[256];\n"
+"  reduction_buffer[get_local_id(0)] = temp[get_local_id(0)];\n"
+"  reduce_local_mem_plus(reduction_buffer);"
+"  if (get_local_id(0) == 0)\n"
+"    *alpha = reduction_buffer[0];\n"
+"}\n"
 "\n";
 
 
@@ -195,6 +223,66 @@ static axbStatus_t op_vec_scale(struct axbVec_s *x, struct axbScalar_s *alpha, v
 
 ///////////////
 
+static axbStatus_t op_vec_sum(struct axbVec_s *x, struct axbScalar_s *alpha, void *aux_data)
+{
+  cl_int status;
+  struct axbOpOpenCL_s *op_opencl = (struct axbOpOpenCL_s*)aux_data;
+
+  cl_mem cl_y     = x->data;
+  cl_uint cl_size = (cl_uint)x->size;
+  void *cl_alpha = alpha->data;
+  size_t cl_alpha_size = sizeof(cl_mem);
+  cl_kernel kernel;
+
+  //
+  // Stage 1: Reduce globally:
+  //
+  cl_mem cl_tempbuffer = clCreateBuffer(op_opencl->context, CL_MEM_READ_WRITE, sizeof(double) * 256, NULL, &status); AXB_ERRCHK(status);
+
+  kernel = op_opencl->kernels[5];
+  cl_alpha_size = sizeof(cl_double);
+
+  /* Set kernel arguments */
+  status = clSetKernelArg(kernel, 0, sizeof(cl_mem),  (void *)&cl_y);     AXB_ERRCHK(status);
+  status = clSetKernelArg(kernel, 1, sizeof(cl_mem),  (void *)&cl_tempbuffer); AXB_ERRCHK(status);
+  status = clSetKernelArg(kernel, 2, sizeof(cl_uint), (void *)&cl_size);  AXB_ERRCHK(status);
+
+  /* Run the kernel */
+  size_t global_work_size = 256 * 256;
+  size_t local_work_size = 256;
+  status = clEnqueueNDRangeKernel(op_opencl->queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL); AXB_ERRCHK(status);
+  status = clFinish(op_opencl->queue); AXB_ERRCHK(status);
+
+  //
+  // Stage 2: Reduce locally:
+  //
+  cl_mem cl_result = NULL;
+  kernel = op_opencl->kernels[6];
+
+  /* Set kernel arguments */
+  status = clSetKernelArg(kernel, 0, sizeof(cl_mem),  (void *)&cl_tempbuffer);     AXB_ERRCHK(status);
+  if (strcmp(alpha->memBackend->name, "host") != 0) {  // alpha on GPU
+    status = clSetKernelArg(kernel, 1, sizeof(cl_mem),  (void *)&cl_alpha); AXB_ERRCHK(status);
+  } else {
+    cl_result = clCreateBuffer(op_opencl->context, CL_MEM_READ_WRITE, sizeof(double), NULL, &status); AXB_ERRCHK(status);
+    status = clSetKernelArg(kernel, 2, sizeof(cl_mem),  (void *)&cl_alpha); AXB_ERRCHK(status);
+  }
+
+  /* Run the kernel */
+  global_work_size = local_work_size;
+  status = clEnqueueNDRangeKernel(op_opencl->queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL); AXB_ERRCHK(status);
+  status = clFinish(op_opencl->queue); AXB_ERRCHK(status);
+
+  // clean up:
+  clReleaseMemObject(cl_tempbuffer);
+  if (cl_result) {
+    clReleaseMemObject(cl_result);
+  }
+  return 0;
+}
+
+///////////////
+
 static axbStatus_t op_vec_axpy(struct axbVec_s *y, struct axbScalar_s *alpha, struct axbVec_s *x, void *aux_data)
 {
   cl_int status;
@@ -248,7 +336,21 @@ static axbStatus_t axbOpBackendInit_OpenCL(struct axbHandle_s *handle, struct ax
   op_opencl->programs[op_opencl->programs_size] = clCreateProgramWithSource(op_opencl->context, 1, &my_compute_program, &kernel_len, &status); AXB_ERRCHK(status);
   op_opencl->programs_size += 1;
 
-  status = clBuildProgram(op_opencl->programs[0], 1, mem_opencl->devices, NULL, NULL, NULL); AXB_ERRCHK(status);
+  status = clBuildProgram(op_opencl->programs[0], 1, mem_opencl->devices, NULL, NULL, NULL);
+  if (status != CL_SUCCESS)
+  {
+    cl_build_status cl_status;
+    clGetProgramBuildInfo(op_opencl->programs[0], mem_opencl->devices[0], CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &cl_status, NULL);
+    fprintf(stderr, "Build Status = %d (Err = %d)\n", cl_status, status);
+
+    size_t ret_val_size; // don't use vcl_size_t here
+    clGetProgramBuildInfo(op_opencl->programs[0], mem_opencl->devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &ret_val_size);
+    char *build_log = malloc(sizeof(char) * (ret_val_size+2));
+    clGetProgramBuildInfo(op_opencl->programs[0], mem_opencl->devices[0], CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
+    build_log[ret_val_size] = '\0';
+    fprintf(stderr, "Log: %s", build_log);
+    free(build_log);
+  }
 
   //
   // Create OpenCL kernels:
@@ -267,6 +369,11 @@ static axbStatus_t axbOpBackendInit_OpenCL(struct axbHandle_s *handle, struct ax
   op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "scale_host", &status); AXB_ERRCHK(status);
   op_opencl->kernels_size += 1;
   op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "scale_device", &status); AXB_ERRCHK(status);
+  op_opencl->kernels_size += 1;
+
+  op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "vec_sum1", &status); AXB_ERRCHK(status);       // 5
+  op_opencl->kernels_size += 1;
+  op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "vec_sum2", &status); AXB_ERRCHK(status);
   op_opencl->kernels_size += 1;
 
   op_opencl->kernels[op_opencl->kernels_size] = clCreateKernel(op_opencl->programs[0], "axpy", &status); AXB_ERRCHK(status);
@@ -311,8 +418,8 @@ axbStatus_t axbOpBackendRegister_OpenCL(struct axbHandle_s *handle)
   AXB_ADD_OPERATION(op_vec_scale,   AXB_OP_VEC_SCALE);
 
   // reduction operations
-  /*AXB_ADD_OPERATION(op_vec_sum,      AXB_OP_VEC_SUM);
-  AXB_ADD_OPERATION(op_vec_dot,      AXB_OP_VEC_DOT);
+  AXB_ADD_OPERATION(op_vec_sum,      AXB_OP_VEC_SUM);
+  /*AXB_ADD_OPERATION(op_vec_dot,      AXB_OP_VEC_DOT);
   AXB_ADD_OPERATION(op_vec_tdot,     AXB_OP_VEC_TDOT);
   AXB_ADD_OPERATION(op_vec_mdot,     AXB_OP_VEC_MDOT);
   AXB_ADD_OPERATION(op_vec_norm1,    AXB_OP_VEC_NORM1);
